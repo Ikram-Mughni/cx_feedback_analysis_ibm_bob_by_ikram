@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CX Feedback Analyzer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1f2328;
+    background: #f0f2f5;
+    padding: 32px 16px 56px;
+  }
+  .wrapper { max-width: 780px; margin: 0 auto; }
+
+  /* ── Page Header ── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .page-header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #57606a;
+    margin-bottom: 6px;
+  }
+  .page-header h1 { font-size: 22px; font-weight: 700; color: #1f2328; }
+  .page-header p  { font-size: 13px; color: #57606a; margin-top: 4px; }
+
+  /* ── Input Card ── */
+  .input-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  .input-card label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #57606a;
+    margin-bottom: 8px;
+  }
+  .input-card textarea {
+    width: 100%;
+    min-height: 120px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    color: #1f2328;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.15s;
+    background: #fafbfc;
+  }
+  .input-card textarea:focus { border-color: #3b82d4; background: #fff; }
+  .input-card textarea::placeholder { color: #9ca3af; }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .input-row select {
+    padding: 8px 12px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #1f2328;
+    background: #fafbfc;
+    outline: none;
+    cursor: pointer;
+  }
+  .btn-analyze {
+    padding: 9px 22px;
+    background: #3b82d4;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-analyze:hover { background: #2563b0; }
+  .btn-analyze:disabled { background: #93c5fd; cursor: not-allowed; }
+  .btn-clear {
+    padding: 9px 16px;
+    background: transparent;
+    color: #57606a;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn-clear:hover { background: #f0f2f5; }
+  .char-count { font-size: 12px; color: #9ca3af; margin-left: auto; }
+
+  /* ── Report ── */
+  #report { display: none; }
+
+  .report-header {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 18px 24px;
+    margin-bottom: 20px;
+  }
+  .report-header .rh-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #57606a;
+    margin-bottom: 4px;
+  }
+  .report-header h2 { font-size: 18px; font-weight: 700; }
+  .report-header .rh-meta { font-size: 12px; color: #57606a; margin-top: 5px; }
+
+  /* Input preview */
+  .input-preview {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #3b82d4;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13.5px;
+    font-style: italic;
+    color: #1f2328;
+  }
+  .input-preview .ip-label {
+    font-style: normal;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #57606a;
+    margin-bottom: 5px;
+  }
+
+  /* ── Section ── */
+  .section {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .section-header {
+    background: #f7f8fa;
+    padding: 10px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    background: #3b82d4;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #1f2328;
+  }
+  .section-body { padding: 16px; }
+
+  /* ── Metric Grid ── */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .metric-card {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .metric-card .m-label {
+    font-size: 10.5px;
+    color: #57606a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .metric-card .m-value {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .score-bar-wrap { margin-top: 5px; }
+  .score-bar-bg {
+    background: #e5e7eb;
+    border-radius: 999px;
+    height: 5px;
+    overflow: hidden;
+  }
+  .score-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+
+  /* ── Badges & Tags ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .b-sp  { background: #dafbe1; color: #1a7f37; }   /* Sangat Positif */
+  .b-p   { background: #d1fae5; color: #065f46; }   /* Positif */
+  .b-n   { background: #f3f4f6; color: #374151; }   /* Netral */
+  .b-ng  { background: #fef3c7; color: #92400e; }   /* Negatif */
+  .b-sn  { background: #ffd8d8; color: #b91c1c; }   /* Sangat Negatif */
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .t-high { background: #ffd8d8; color: #b91c1c; }
+  .t-mid  { background: #fef3c7; color: #92400e; }
+  .t-low  { background: #dafbe1; color: #166534; }
+  .t-blue { background: #dbeafe; color: #1d4ed8; }
+  .t-pur  { background: #ede9fe; color: #5b21b6; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: #f7f8fa;
+    text-align: left;
+    padding: 7px 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #57606a;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+  }
+  td { padding: 8px 12px; border-bottom: 1px solid #f0f1f3; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Reply Boxes ── */
+  .reply-box {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    font-size: 13.5px;
+  }
+  .reply-box:last-child { margin-bottom: 0; }
+  .reply-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #57606a;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Finding List ── */
+  .finding-list { list-style: none; }
+  .finding-list li {
+    padding: 7px 0;
+    border-bottom: 1px solid #f0f1f3;
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .finding-list li:last-child { border-bottom: none; }
+  .fi { font-weight: 700; flex-shrink: 0; }
+  .fi-ok   { color: #1a7f37; }
+  .fi-warn { color: #d97706; }
+  .fi-bad  { color: #b91c1c; }
+  .fi-info { color: #3b82d4; }
+
+  /* ── Summary Bar ── */
+  .summary-bar {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 14px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .sb-item .sb-label {
+    font-size: 10.5px;
+    color: #57606a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .sb-item .sb-value { font-size: 13px; font-weight: 700; }
+
+  /* ── Empty / Loading ── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #9ca3af;
+  }
+  .empty-state svg { margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── Sample Chips ── */
+  .samples-wrap {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #e5e7eb;
+  }
+  .samples-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #57606a;
+    margin-bottom: 8px;
+  }
+  .samples-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: opacity 0.15s, border-color 0.15s;
+    line-height: 1.4;
+  }
+  .chip:hover  { opacity: 0.82; border-color: rgba(0,0,0,0.12); }
+  .chip-active { outline: 2px solid currentColor; outline-offset: 1px; font-weight: 700; }
+  .chip-sp { background: #dafbe1; color: #166534; }   /* Sangat Positif */
+  .chip-p  { background: #dbeafe; color: #1d4ed8; }   /* Positif */
+  .chip-n  { background: #f3f4f6; color: #374151; }   /* Netral */
+  .chip-ng { background: #fef3c7; color: #92400e; }   /* Negatif */
+  .chip-sn { background: #ffd8d8; color: #b91c1c; }   /* Sangat Negatif */
+  .chip-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .chip-sp .chip-dot { background: #1a7f37; }
+  .chip-p  .chip-dot { background: #1d4ed8; }
+  .chip-n  .chip-dot { background: #6b7280; }
+  .chip-ng .chip-dot { background: #d97706; }
+  .chip-sn .chip-dot { background: #b91c1c; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 32px;
+    padding-top: 14px;
+    border-top: 1px solid #d0d7de;
+    text-align: center;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+
+  @media (max-width: 500px) {
+    .metric-grid { grid-template-columns: 1fr 1fr; }
+    .input-row   { flex-direction: column; align-items: stretch; }
+    .char-count  { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="eyebrow">Customer Experience Intelligence</div>
+    <h1>CX Feedback Analyzer</h1>
+    <p>Masukkan ulasan pelanggan — sistem akan menganalisis sentimen &amp; menyusun laporan otomatis.</p>
+  </div>
+
+  <!-- Input Card -->
+  <div class="input-card">
+    <label for="review-input">Teks Ulasan Pelanggan</label>
+    <textarea id="review-input"
+      placeholder="Contoh: Saya kecewa dengan pelayanan kalian. Pesanan saya sudah 5 hari belum datang, dan CS tidak bisa memberikan solusi. Ini sangat mengecewakan..."></textarea>
+
+    <div class="input-row">
+      <select id="category-select">
+        <option value="auto">Kategori: Auto-Detect</option>
+        <option value="delivery">Delivery / Pengiriman</option>
+        <option value="service">Service Quality</option>
+        <option value="product">Product Quality</option>
+        <option value="app">Bug Aplikasi</option>
+        <option value="billing">Billing / Pembayaran</option>
+        <option value="other">Lainnya</option>
+      </select>
+      <button class="btn-analyze" id="btn-analyze">&#9654; Analisis Sekarang</button>
+      <button class="btn-clear" id="btn-clear">Hapus</button>
+      <span class="char-count" id="char-count">0 karakter</span>
+    </div>
+  </div>
+
+  <!-- Sample Chips -->
+  <div class="samples-wrap">
+    <div class="samples-label">Coba contoh ulasan:</div>
+    <div class="samples-list">
+      <button class="chip chip-sp" data-cat="service"
+        data-text="Saya benar-benar terkesan dengan layanan pelanggan kalian! Kemarin saya menghubungi CS karena paket saya terlambat, dan agent bernama Rina langsung menyelesaikan masalah dalam waktu kurang dari 15 menit. Dia sangat ramah, sabar, dan tahu persis apa yang harus dilakukan. Saya sudah jadi pelanggan 3 tahun dan tidak akan pindah ke mana-mana. Terima kasih banyak!">
+        <span class="chip-dot"></span> Sangat Positif — Pujian Agent CS
+      </button>
+      <button class="chip chip-p" data-cat="delivery"
+        data-text="Pengiriman lumayan cepat, barang sampai dalam 2 hari. Packagingnya aman dan produknya sesuai foto. CS juga responsif waktu saya tanya soal resi. Lumayan puas, akan belanja lagi di sini.">
+        <span class="chip-dot"></span> Positif — Pengiriman & Produk
+      </button>
+      <button class="chip chip-n" data-cat="service"
+        data-text="Pelayanannya biasa saja, tidak ada yang istimewa. CS membalas tapi jawabannya terasa template semua. Masalah saya cukup terselesaikan tapi butuh beberapa kali chat. Standar lah, tidak lebih tidak kurang.">
+        <span class="chip-dot"></span> Netral — Layanan Standar
+      </button>
+      <button class="chip chip-ng" data-cat="delivery"
+        data-text="Saya kecewa dengan pelayanan kalian. Pesanan saya sudah 5 hari belum datang padahal estimasi 2 hari. Waktu saya hubungi CS, jawabannya lambat dan tidak ada solusi konkret. Ini mengecewakan sekali, uang sudah keluar tapi barang tidak kunjung tiba.">
+        <span class="chip-dot"></span> Negatif — Keterlambatan Pengiriman
+      </button>
+      <button class="chip chip-sn" data-cat="app"
+        data-text="Aplikasi kalian sangat parah! Sudah 3 kali saya coba bayar selalu error dan uang sudah terpotong tapi pesanan tidak masuk. CS tidak bisa memberikan solusi dan minta saya tunggu 7 hari kerja. Ini penipuan namanya! Saya tidak akan pernah mau pakai aplikasi ini lagi dan akan lapor ke pihak berwenang.">
+        <span class="chip-dot"></span> Sangat Negatif — Bug &amp; Penipuan
+      </button>
+      <button class="chip chip-ng" data-cat="product"
+        data-text="Barang yang datang tidak sesuai deskripsi. Warnanya beda, bahannya juga terasa murahan padahal harganya tidak murah. Sudah komplain ke CS tapi proses refund-nya sangat lambat dan berbelit-belit. Kecewa banget sama seller ini.">
+        <span class="chip-dot"></span> Negatif — Kualitas Produk
+      </button>
+    </div>
+  </div>
+
+  <!-- Report Output -->
+  <div id="report"></div>
+
+  <!-- Footer -->
+  <div class="footer">Made with IBM Bob &nbsp;|&nbsp; CX Feedback Analyzer v2.0 &nbsp;|&nbsp; ikramspace1@gmail.com </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  KAMUS SENTIMEN (Bahasa Indonesia + Ejaan Informal)
+// ══════════════════════════════════════════════════════════════
+const LEXICON = {
+  // ── Sangat Positif (+3) ──────────────────────────────────
+  "luar biasa":3,"sangat puas":3,"terkesan":3,"terpesona":3,"menakjubkan":3,
+  "terbaik":3,"sempurna":3,"memuaskan sekali":3,"sangat membantu":3,
+  "cepat sekali":3,"profesional sekali":3,"hebat sekali":3,"mantap banget":3,
+  "recommended banget":3,"highly recommend":3,"5 bintang":3,"bintang 5":3,
+  "setia":3,"loyal":3,"tidak akan pindah":3,"tidak mau pindah":3,
+  "ramah sekali":3,"sangat ramah":3,"sangat cepat":3,"luar biasa bagus":3,
+  "paling bagus":3,"amazing":3,"awesome":3,"excellent":3,"perfect":3,
+
+  // ── Positif (+2) ────────────────────────────────────────
+  "bagus":2,"baik":2,"puas":2,"senang":2,"terima kasih":2,"makasih":2,
+  "bantu":2,"membantu":2,"cepat":2,"ramah":2,"sigap":2,"responsif":2,
+  "solutif":2,"solusi":2,"resolved":2,"selesai":2,"beres":2,"ok":1,
+  "oke":1,"mantap":2,"keren":2,"tepat":2,"mudah":2,"nyaman":2,
+  "memuaskan":2,"menyenangkan":2,"helpful":2,"friendly":2,"fast":2,
+  "recommend":2,"rekomendasi":2,"setuju":2,"suka":2,"seneng":2,
+  "sabar":2,"pengertian":2,"perhatian":2,"peduli":2,"terpercaya":2,
+  "handal":2,"andal":2,"konsisten":2,"terjangkau":2,"worth it":2,
+  "aman":2,"terjamin":2,"bintang":2,"top":2,"good":2,"great":2,"nice":2,
+
+  // ── Netral (+1/0) ────────────────────────────────────────
+  "biasa":0,"standar":0,"lumayan":1,"cukup":1,"lumayan baik":1,
+  "bisa dimaklumi":0,"wajar":0,"normal":0,"netral":0,
+
+  // ── Negatif (-2) ────────────────────────────────────────
+  "kecewa":(-2),"lambat":(-2),"lama":(-2),"tidak memuaskan":(-2),
+  "buruk":(-2),"jelek":(-2),"payah":(-2),"gagal":(-2),"error":(-2),
+  "rusak":(-2),"salah":(-2),"tidak sesuai":(-2),"tidak membantu":(-2),
+  "tidak responsif":(-2),"tidak ramah":(-2),"kasar":(-2),"jutek":(-2),
+  "ngabaikan":(-2),"abaikan":(-2),"tidak ditanggapi":(-2),"tidak ada solusi":(-2),
+  "terlambat":(-2),"telat":(-2),"delay":(-2),"belum datang":(-2),
+  "tidak bisa":(-2),"tidak berfungsi":(-2),"tidak bekerja":(-2),
+  "mengecewakan":(-2),"rugi":(-2),"menyesal":(-2),"susah":(-2),
+  "rumit":(-2),"ribet":(-2),"mahal":(-2),"tidak worth":(-2),
+  "bad":(-2),"poor":(-2),"worst":(-3),"terrible":(-3),
+
+  // ── Sangat Negatif (-3) ──────────────────────────────────
+  "sangat kecewa":(-3),"sangat buruk":(-3),"sangat mengecewakan":(-3),
+  "parah":(-3),"sangat parah":(-3),"tidak bisa diterima":(-3),
+  "brengsek":(-3),"sampah":(-3),"terburuk":(-3),"penipuan":(-3),
+  "ditipu":(-3),"menipu":(-3),"bohong":(-3),"tidak jujur":(-3),
+  "tidak profesional":(-3),"tidak bertanggung jawab":(-3),
+  "tidak mau kembali":(-3),"kapok":(-3),"tobat":(-3),
+  "lapor":(-2),"komplain":(-2),"keluhan":(-2),"protes":(-2),
+  "awful":(-3),"horrible":(-3),"scam":(-3),
+};
+
+// ── Kata penguat intensitas ──────────────────────────────────
+const INTENSIFIERS = ["sangat","amat","banget","sekali","benar-benar","sungguh",
+                      "betul-betul","super","extremely","very","really","luar biasa"];
+
+// ── Kata pembalik ────────────────────────────────────────────
+const NEGATORS = ["tidak","bukan","belum","tanpa","jangan","gak","ga","nggak",
+                  "ngga","tak","enggak","tidaklah","bukanlah"];
+
+// ── Kata kunci kategori ──────────────────────────────────────
+const CATEGORY_KEYWORDS = {
+  "Delivery / Pengiriman": ["paket","kiriman","kurir","pengiriman","terlambat","telat","delay",
+    "ekspedisi","logistik","tracking","resi","datang","dikirim","diterima","estimasi"],
+  "Service Quality":       ["cs","customer service","agent","staff","operator","layanan","respon",
+    "balasan","ditanggapi","solusi","membantu","ramah","sabar","profesional","hotline","chat","call"],
+  "Product Quality":       ["produk","barang","kualitas","rusak","cacat","tidak sesuai","foto",
+    "deskripsi","palsu","asli","original","bahan","ukuran","warna","beda"],
+  "Bug Aplikasi":          ["aplikasi","app","error","bug","crash","loading","lambat","tidak bisa",
+    "fitur","update","versi","login","akun","otp","kode","notifikasi","server","down"],
+  "Billing / Pembayaran":  ["bayar","pembayaran","tagihan","refund","pengembalian","dana","transfer",
+    "invoice","struk","kwitansi","cicilan","kredit","debit","saldo","promo","diskon","voucher"],
+};
+
+// ══════════════════════════════════════════════════════════════
+//  ENGINE ANALISIS
+// ══════════════════════════════════════════════════════════════
+function analyzeText(text, forcedCategory) {
+  const lower = text.toLowerCase();
+  const words  = lower.split(/\s+/);
+
+  // 1. SCORING ────────────────────────────────────────────────
+  let totalScore = 0;
+  let matchCount = 0;
+  const matchedPhrases = [];
+
+  // Cek frasa multi-kata dulu (prioritas lebih tinggi)
+  const phrases = Object.keys(LEXICON).sort((a,b) => b.split(" ").length - a.split(" ").length);
+  const usedRanges = new Set();
+
+  for (const phrase of phrases) {
+    let idx = lower.indexOf(phrase);
+    while (idx !== -1) {
+      const range = `${idx}-${idx+phrase.length}`;
+      if (!usedRanges.has(range)) {
+        // Cek negator sebelum frasa (dalam 3 kata)
+        const before = lower.slice(Math.max(0, idx - 25), idx).trim().split(/\s+/);
+        const negated = before.slice(-3).some(w => NEGATORS.includes(w));
+        // Cek intensifier sebelum frasa
+        const intensified = before.slice(-3).some(w => INTENSIFIERS.includes(w));
+
+        let score = LEXICON[phrase];
+        if (negated)    score = -Math.abs(score);
+        if (intensified) score = score > 0 ? score + 1 : score - 1;
+        score = Math.max(-4, Math.min(4, score));
+
+        totalScore += score;
+        matchCount++;
+        usedRanges.add(range);
+        matchedPhrases.push({ phrase, score, negated, intensified });
+      }
+      idx = lower.indexOf(phrase, idx + 1);
+    }
+  }
+
+  // 2. NORMALISASI SKOR ────────────────────────────────────────
+  const rawScore = matchCount > 0 ? totalScore / matchCount : 0;
+  const wordCount = words.length;
+  const complexityMod = wordCount > 80 ? 0.9 : 1;
+  const normalizedScore = rawScore * complexityMod;
+
+  // 3. SENTIMEN LABEL ──────────────────────────────────────────
+  let sentiment, sentimentClass, confidenceBase, intensityBase;
+  if      (normalizedScore >= 2.0)  { sentiment="Sangat Positif"; sentimentClass="b-sp"; confidenceBase=92; intensityBase=9; }
+  else if (normalizedScore >= 0.8)  { sentiment="Positif";        sentimentClass="b-p";  confidenceBase=85; intensityBase=7; }
+  else if (normalizedScore >= -0.3) { sentiment="Netral";         sentimentClass="b-n";  confidenceBase=70; intensityBase=5; }
+  else if (normalizedScore >= -1.5) { sentiment="Negatif";        sentimentClass="b-ng"; confidenceBase=83; intensityBase=7; }
+  else                               { sentiment="Sangat Negatif"; sentimentClass="b-sn"; confidenceBase=91; intensityBase=9; }
+
+  // Confidence: naik jika banyak kata cocok, turun jika teks pendek
+  const matchRatio = matchCount / Math.max(1, wordCount / 3);
+  const confidence = Math.min(99, Math.max(45, Math.round(confidenceBase + matchRatio * 10 - (wordCount < 10 ? 10 : 0))));
+
+  // Intensity: 1-10 berdasarkan magnitude skor
+  const intensity = Math.min(10, Math.max(1, Math.round(intensityBase + Math.abs(normalizedScore) * 0.5)));
+
+  // 4. EMOSI ───────────────────────────────────────────────────
+  const emotionMap = {
+    "Sangat Positif": ["Puas & Loyal","Senang","Antusias","Kagum"],
+    "Positif":        ["Puas","Lega","Apresiasi","Berterima Kasih"],
+    "Netral":         ["Biasa","Cukup Puas","Ekspektatif","Tidak Yakin"],
+    "Negatif":        ["Kecewa","Frustrasi","Kesal","Tidak Puas"],
+    "Sangat Negatif": ["Sangat Kecewa","Marah","Frustrasi Tinggi","Merasa Dirugikan"],
+  };
+  const emotions = emotionMap[sentiment];
+  const primaryEmotion = emotions[Math.min(Math.floor(Math.abs(normalizedScore * 0.7)), emotions.length-1)];
+
+  // 5. KATEGORI AUTO-DETECT ────────────────────────────────────
+  let detectedCategories = [];
+  if (forcedCategory && forcedCategory !== "auto") {
+    const labels = {
+      "delivery":"Delivery / Pengiriman","service":"Service Quality",
+      "product":"Product Quality","app":"Bug Aplikasi",
+      "billing":"Billing / Pembayaran","other":"Lainnya"
+    };
+    detectedCategories = [labels[forcedCategory]];
+  } else {
+    const catScores = {};
+    for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+      catScores[cat] = keywords.filter(k => lower.includes(k)).length;
+    }
+    const max = Math.max(...Object.values(catScores));
+    if (max > 0) {
+      detectedCategories = Object.entries(catScores)
+        .filter(([,v]) => v >= Math.max(1, max - 1))
+        .sort((a,b) => b[1]-a[1])
+        .slice(0,3)
+        .map(([k]) => k);
+    } else {
+      detectedCategories = ["Umum / Lainnya"];
+    }
+  }
+
+  // 6. HIGHLIGHTED KEYWORDS ────────────────────────────────────
+  const topPositive = matchedPhrases.filter(m => m.score > 0).sort((a,b)=>b.score-a.score).slice(0,4);
+  const topNegative = matchedPhrases.filter(m => m.score < 0).sort((a,b)=>a.score-b.score).slice(0,4);
+
+  return {
+    sentiment, sentimentClass, confidence, intensity, primaryEmotion,
+    normalizedScore, matchCount, detectedCategories,
+    topPositive, topNegative, wordCount
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+//  GENERATOR KONTEN DINAMIS
+// ══════════════════════════════════════════════════════════════
+function generateRootCause(r, text) {
+  const lower = text.toLowerCase();
+  const isPos = r.normalizedScore > 0;
+  const rows = [];
+
+  // Pemicu
+  const triggers = [];
+  if (lower.match(/terlambat|telat|delay|belum datang/)) triggers.push("keterlambatan pengiriman");
+  if (lower.match(/rusak|cacat|tidak sesuai/)) triggers.push("kualitas produk bermasalah");
+  if (lower.match(/error|bug|crash|tidak bisa/)) triggers.push("gangguan teknis aplikasi");
+  if (lower.match(/tidak ditanggapi|tidak dibalas|lama dibalas/)) triggers.push("respons CS lambat");
+  if (lower.match(/refund|pengembalian|uang/)) triggers.push("isu pembayaran/refund");
+  if (lower.match(/ramah|sabar|membantu|cepat/)) triggers.push("kualitas pelayanan agent");
+  const triggerText = triggers.length > 0 ? triggers.join(", ") : (isPos ? "pengalaman berbelanja/menggunakan layanan" : "interaksi dengan layanan/produk");
+
+  rows.push({ dim: "Pemicu Utama", val: `Pelanggan menyampaikan pengalaman terkait <strong>${triggerText}</strong>.` });
+
+  // Root Cause
+  if (isPos) {
+    const agents = text.match(/\b([A-Z][a-z]+)\b/g);
+    const namedAgent = agents ? agents.find(n => !["Saya","Ini","Kami","Tim","Terima"].includes(n)) : null;
+    rows.push({ dim: "Root Cause Positif", val: namedAgent
+      ? `Kompetensi dan empati ${namedAgent} berhasil menciptakan pengalaman pelanggan yang melebihi ekspektasi.`
+      : "Kualitas layanan yang konsisten dan responsif menciptakan pengalaman positif bagi pelanggan." });
+  } else {
+    rows.push({ dim: "Root Cause Negatif", val: `Terdapat gap antara ekspektasi pelanggan dan realisasi layanan/produk, menyebabkan rasa <strong>${r.primaryEmotion.toLowerCase()}</strong>.` });
+  }
+
+  // Dampak
+  if (r.normalizedScore >= 2) {
+    rows.push({ dim: "Dampak Bagi Pelanggan", val: "Pengalaman positif memperkuat loyalitas. Risiko churn sangat rendah. Potensi advocacy tinggi." });
+  } else if (r.normalizedScore >= 0.5) {
+    rows.push({ dim: "Dampak Bagi Pelanggan", val: "Pelanggan merasa cukup puas. Loyalitas terjaga namun masih ada ruang peningkatan untuk memperkuat retensi." });
+  } else if (r.normalizedScore >= -0.3) {
+    rows.push({ dim: "Dampak Bagi Pelanggan", val: "Pengalaman netral — pelanggan tidak terkesan namun juga tidak kecewa. Perlu inisiatif proaktif agar tidak berpindah." });
+  } else if (r.normalizedScore >= -1.5) {
+    rows.push({ dim: "Dampak Bagi Pelanggan", val: "Pelanggan merasa kecewa dan dirugikan. Risiko churn moderat. Penanganan cepat diperlukan untuk mempertahankan kepercayaan." });
+  } else {
+    rows.push({ dim: "Dampak Bagi Pelanggan", val: "Pelanggan sangat dirugikan dan memiliki potensi <strong>churn tinggi</strong>. Risiko reputasi jika ulasan disebarluaskan di media sosial." });
+  }
+
+  // Risiko tersembunyi
+  if (isPos && lower.match(/terlambat|telat|delay|rusak|error|bug/)) {
+    rows.push({ dim: "Risiko Tersembunyi", val: "Meskipun CS menangani baik, isu asal (teknis/logistik) belum tentu terselesaikan. Perlu tindak lanjut ke tim terkait." });
+  } else if (!isPos) {
+    rows.push({ dim: "Risiko Tersembunyi", val: "Jika tidak ditangani segera, pelanggan berpotensi meninggalkan ulasan negatif publik yang dapat memengaruhi reputasi brand." });
+  }
+
+  return rows;
+}
+
+function generateFindings(r, text) {
+  const lower = text.toLowerCase();
+  const isPos = r.normalizedScore > 0;
+  const items = [];
+
+  if (r.normalizedScore >= 2) {
+    items.push({ type:"ok",   text:"Pelanggan adalah kandidat ideal untuk program <strong>VoC Champion</strong> atau <strong>referral program</strong>." });
+    items.push({ type:"ok",   text:"Profil pelanggan ini berpotensi sebagai <strong>brand promoter</strong> — pertimbangkan program loyalitas eksklusif." });
+  }
+  if (lower.match(/\b([A-Z][a-z]+)\b/) && isPos) {
+    const agents = text.match(/\b([A-Z][a-z]+)\b/g);
+    const named = agents ? agents.find(n => !["Saya","Ini","Kami","Tim","Terima","Kalian"].includes(n)) : null;
+    if (named) items.push({ type:"ok", text:`Performa <strong>${named}</strong> layak dijadikan <strong>benchmark pelatihan</strong> dan studi kasus internal.` });
+  }
+  if (lower.match(/terlambat|telat|delay|belum datang/)) {
+    items.push({ type:"warn", text:"Data keterlambatan pengiriman harus diteruskan ke <strong>tim logistik</strong> untuk analisis frekuensi dan SLA." });
+  }
+  if (lower.match(/error|bug|crash|tidak bisa|tidak berfungsi/)) {
+    items.push({ type:"bad",  text:"Laporan bug/error aplikasi harus segera dieskalasi ke <strong>tim teknis</strong> dengan log detail untuk investigasi." });
+  }
+  if (lower.match(/refund|pengembalian|uang|dana/)) {
+    items.push({ type:"warn", text:"Proses <strong>refund/pengembalian dana</strong> perlu diprioritaskan dan dikonfirmasi ke pelanggan dengan tenggat yang jelas." });
+  }
+  if (!isPos && r.intensity >= 8) {
+    items.push({ type:"bad",  text:"Tingkat intensitas tinggi — <strong>eskalasi ke supervisor/manajer CS</strong> disarankan sebelum menjawab pelanggan." });
+  }
+  if (r.normalizedScore >= -0.3 && r.normalizedScore < 0.8) {
+    items.push({ type:"info", text:"Sentimen netral mengindikasikan ekspektasi yang belum sepenuhnya terpenuhi. Pertimbangkan <strong>proactive follow-up</strong>." });
+  }
+  if (items.length === 0) {
+    items.push({ type:"info", text:"Tidak ada temuan khusus selain tindak lanjut standar sesuai action plan." });
+  }
+  return items;
+}
+
+function generateActionPlan(r) {
+  const isPos = r.normalizedScore > 0;
+  const plans = [];
+
+  if (isPos) {
+    plans.push({ priority:"t-high", label:"TINGGI — SEGERA",   action:"Balas Ulasan Pelanggan",      detail:"Kirim balasan personal dalam 24 jam. Sertakan rasa terima kasih yang tulus dan nama agent jika disebutkan.", target:"&lt;24 jam" });
+    plans.push({ priority:"t-mid",  label:"SEDANG — MINGGU INI", action:"Apresiasi Agent/Tim",        detail:"Berikan employee recognition formal (Agent of the Week, bonus poin). Dokumentasikan sebagai best practice case. PIC: Supervisor CS", target:"2–3 hari kerja" });
+    plans.push({ priority:"t-mid",  label:"SEDANG — BULAN INI",  action:"Rekam sebagai Studi Kasus",   detail:"Dokumentasikan alur penanganan sebagai knowledge base article untuk onboarding dan coaching agent baru. PIC: QA / L&D", target:"7 hari kerja" });
+    plans.push({ priority:"t-low",  label:"PANJANG — KUARTAL",   action:"Program Loyalitas & VoC",     detail:"Identifikasi pelanggan dengan pola serupa (tenure panjang, feedback positif). Rekrut sebagai brand advocate atau beta tester. PIC: CX Strategy", target:"Q3–Q4 2025" });
+  } else if (r.normalizedScore >= -0.3) {
+    plans.push({ priority:"t-high", label:"TINGGI — SEGERA",    action:"Balas & Tindak Lanjut",       detail:"Hubungi pelanggan secara proaktif. Tanya apakah ada yang bisa ditingkatkan. Jangan tunggu eskalasi.", target:"&lt;24 jam" });
+    plans.push({ priority:"t-mid",  label:"SEDANG — MINGGU INI", action:"Review Ekspektasi Pelanggan", detail:"Analisis gap antara ekspektasi pelanggan dan standar layanan saat ini. Bawa ke rapat tim untuk diskusi peningkatan.", target:"5 hari kerja" });
+    plans.push({ priority:"t-low",  label:"PANJANG",             action:"Inisiatif Proaktif CX",       detail:"Buat program check-in berkala (survey NPS, follow-up email) untuk pelanggan dengan profil netral. PIC: CX Manager", target:"Bulan ini" });
+  } else {
+    plans.push({ priority:"t-high", label:"TINGGI — SEGERA",    action:"Eskalasi & Respons Darurat",  detail:"Segera respons dengan empati. Jika intensitas tinggi (≥8), eskalasi ke supervisor sebelum membalas. SLA respons: &lt;1 jam.", target:"&lt;1 jam" });
+    plans.push({ priority:"t-high", label:"TINGGI — SEGERA",    action:"Investigasi & Resolusi",      detail:"Telusuri akar masalah (sistem/logistik/SDM). Berikan solusi konkret dan tenggat jelas kepada pelanggan. PIC: CS Lead + Ops", target:"&lt;4 jam" });
+    plans.push({ priority:"t-mid",  label:"SEDANG — MINGGU INI", action:"Kompensasi & Retention",     detail:"Evaluasi kelayakan kompensasi (diskon, voucher, refund) sebagai gestur goodwill. Dokumentasikan untuk audit. PIC: CS Manager", target:"3 hari kerja" });
+    plans.push({ priority:"t-mid",  label:"SEDANG — BULAN INI",  action:"Root Cause Analysis Formal", detail:"Adakan RCA lintas departemen (CS, Ops, Teknis). Buat laporan dan corrective action plan agar tidak berulang.", target:"14 hari kerja" });
+    plans.push({ priority:"t-low",  label:"PANJANG — KUARTAL",   action:"Review SOP & Training",      detail:"Perbarui SOP penanganan keluhan berdasarkan temuan RCA. Sertakan dalam modul pelatihan agent. PIC: QA / L&D", target:"Q3–Q4 2025" });
+  }
+  return plans;
+}
+
+function generateReplies(r, text) {
+  const isPos = r.normalizedScore > 0;
+  const isNeg = r.normalizedScore < -0.3;
+  const agents = text.match(/\b([A-Z][a-z]{2,})\b/g);
+  const named  = agents ? agents.find(n => !["Saya","Ini","Kami","Tim","Terima","Kalian","Yang","Dengan","Untuk"].includes(n)) : null;
+
+  let formalBody, casualBody;
+
+  if (isPos) {
+    formalBody = `<p>Yth. Bapak/Ibu [Nama Pelanggan],</p><br>
+<p>Terima kasih banyak telah meluangkan waktu untuk berbagi pengalaman positif Anda. Pesan Anda sungguh berarti bagi seluruh tim kami.</p><br>
+<p>${named
+  ? `Kami dengan bangga akan meneruskan apresiasi Anda kepada <strong>${named}</strong> — kami pastikan ia mengetahui betapa besar dampak kerja kerasnya bagi kepuasan Anda.`
+  : "Kami akan memastikan apresiasi Anda sampai kepada seluruh tim yang telah bekerja keras memberikan pelayanan terbaik."
+}</p><br>
+<p>Kepercayaan Anda adalah motivasi terbesar kami untuk terus berinovasi dan meningkatkan layanan. Kami berkomitmen untuk selalu hadir memberikan pengalaman terbaik bagi Anda.</p><br>
+<p>Apabila ada hal lain yang dapat kami bantu, jangan ragu menghubungi kami kapan saja.</p><br>
+<p>Salam hangat,<br><strong>Ikramm</strong><br>The Space Customer Experience Team</p>`;
+
+    casualBody = `Halo! Makasih banyak udah nulis review sebaik ini — kamu bikin hari kami jauh lebih menyenangkan! ${named ? `Langsung kami sampaikan ke <strong>${named}</strong> ya! ` : ""}Senang banget bisa terus menemani kamu. Sampai ketemu lagi! 😊 — Tim The Space`;
+
+  } else if (!isNeg) {
+    formalBody = `<p>Yth. Bapak/Ibu [Nama Pelanggan],</p><br>
+<p>Terima kasih telah menyampaikan pengalaman Anda kepada kami. Masukan Anda sangat berharga untuk perbaikan layanan kami ke depannya.</p><br>
+<p>Kami ingin memastikan bahwa setiap pelanggan mendapatkan pengalaman terbaik. Apabila ada hal spesifik yang ingin Anda sampaikan atau ada yang bisa kami perbaiki, kami sangat terbuka untuk mendengarnya.</p><br>
+<p>Silakan hubungi kami kapan saja — kami siap membantu.</p><br>
+<p>Hormat kami,<br><strong>Ikramm</strong></p>`;
+
+    casualBody = `Halo! Terima kasih udah ngasih feedback ya. Kalau ada yang bisa kami improve, langsung komen atau DM kami aja — kami siap dengerin dan bantu! 😊 — Tim The Space`;
+
+  } else {
+    formalBody = `<p>Yth. Bapak/Ibu [Nama Pelanggan],</p><br>
+<p>Pertama-tama, kami ingin menyampaikan permohonan maaf yang sebesar-besarnya atas pengalaman yang tidak menyenangkan ini. Kami memahami betapa mengecewakan situasi yang Anda alami.</p><br>
+<p>Kami telah menerima laporan Anda dan saat ini sedang dalam proses investigasi untuk segera menemukan solusi terbaik. Tim kami akan menghubungi Anda dalam <strong>[X jam/hari kerja]</strong> dengan update konkret dan penyelesaian masalah ini.</p><br>
+<p>Sekali lagi kami mohon maaf atas ketidaknyamanan ini. Kepercayaan Anda sangat penting bagi kami, dan kami berkomitmen untuk memastikan hal seperti ini tidak terulang kembali.</p><br>
+<p>Hormat kami,<br><strong>Ikramm</strong><br>The Space Customer Experience Team</p>`;
+
+    casualBody = `Halo, kami turut minta maaf banget atas pengalaman yang kurang menyenangkan ini 🙏 Kami lagi proses investigasi sekarang ya. Tim kami akan follow up ke kamu secepatnya. Bisa DM kami dengan no. order untuk percepat prosesnya? — Tim The Space`;
+  }
+
+  return { formalBody, casualBody };
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RENDER REPORT
+// ══════════════════════════════════════════════════════════════
+function renderReport(text, r) {
+  const now   = new Date();
+  const dateStr = now.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
+  const ticketId= "CX-"+now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(Math.floor(Math.random()*9000)+1000);
+
+  const rootCauseRows = generateRootCause(r, text);
+  const findings      = generateFindings(r, text);
+  const actionPlans   = generateActionPlan(r);
+  const replies       = generateReplies(r, text);
+
+  // Score bar colors
+  const barColor = r.normalizedScore >= 0.8 ? "#1a7f37" : r.normalizedScore >= -0.3 ? "#d97706" : "#b91c1c";
+
+  // Churn / NPS
+  let churnRisk, churnColor, npsLabel, advLabel;
+  if      (r.normalizedScore >= 2)    { churnRisk="Sangat Rendah"; churnColor="#1a7f37"; npsLabel="Promoter (9–10)"; advLabel="Tinggi (Brand Promoter)"; }
+  else if (r.normalizedScore >= 0.8)  { churnRisk="Rendah";        churnColor="#3b82d4"; npsLabel="Passive (7–8)";   advLabel="Sedang"; }
+  else if (r.normalizedScore >= -0.3) { churnRisk="Moderat";       churnColor="#d97706"; npsLabel="Passive (6–7)";   advLabel="Rendah–Sedang"; }
+  else if (r.normalizedScore >= -1.5) { churnRisk="Tinggi";        churnColor="#c2410c"; npsLabel="Detractor (3–5)"; advLabel="Rendah"; }
+  else                                 { churnRisk="Sangat Tinggi"; churnColor="#b91c1c"; npsLabel="Detractor (1–3)"; advLabel="Sangat Rendah"; }
+
+  let html = `
+    <!-- Report Header -->
+    <div class="report-header">
+      <div class="rh-label">Customer Experience Intelligence Report</div>
+      <h2>Laporan Analisis Ulasan Pelanggan</h2>
+      <div class="rh-meta">
+        Tanggal: <strong>${dateStr}</strong> &nbsp;|&nbsp;
+        Analis: <strong>CX AI Engine v1.0</strong> &nbsp;|&nbsp;
+        ID Tiket: <strong>${ticketId}</strong> &nbsp;|&nbsp;
+        Panjang Ulasan: <strong>${r.wordCount} kata</strong>
+      </div>
+    </div>
+
+    <!-- Input Preview -->
+    <div class="input-preview">
+      <div class="ip-label">Input Ulasan Pelanggan</div>
+      "${escHtml(text)}"
+    </div>
+
+    <!-- Section 1: Metrik Sentimen -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">1</span>
+        <span class="section-title">Metrik Sentimen &amp; Klasifikasi</span>
+      </div>
+      <div class="section-body">
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="m-label">Sentimen Utama</div>
+            <div class="m-value"><span class="badge ${r.sentimentClass}">${r.sentiment}</span></div>
+          </div>
+          <div class="metric-card">
+            <div class="m-label">Confidence Score</div>
+            <div class="m-value" style="color:${barColor}">${r.confidence}%</div>
+            <div class="score-bar-wrap"><div class="score-bar-bg">
+              <div class="score-bar-fill" style="width:${r.confidence}%;background:${barColor}"></div>
+            </div></div>
+          </div>
+          <div class="metric-card">
+            <div class="m-label">Intensity Score</div>
+            <div class="m-value" style="color:#3b82d4">${r.intensity} / 10</div>
+            <div class="score-bar-wrap"><div class="score-bar-bg">
+              <div class="score-bar-fill" style="width:${r.intensity*10}%;background:#3b82d4"></div>
+            </div></div>
+          </div>
+          <div class="metric-card">
+            <div class="m-label">Primary Emotion</div>
+            <div class="m-value" style="color:#7c5cd8">${r.primaryEmotion}</div>
+          </div>
+          <div class="metric-card" style="grid-column:1/-1">
+            <div class="m-label">Kategori Terdeteksi</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+              ${r.detectedCategories.map(c => `<span class="badge t-blue" style="border-radius:999px;background:#dbeafe;color:#1d4ed8">${c}</span>`).join("")}
+            </div>
+          </div>
+        </div>
+
+        ${r.topPositive.length > 0 || r.topNegative.length > 0 ? `
+        <table>
+          <thead><tr>
+            <th>Kata/Frasa Terdeteksi</th>
+            <th>Bobot Skor</th>
+            <th>Modifikator</th>
+          </tr></thead>
+          <tbody>
+            ${[...r.topPositive,...r.topNegative].map(m=>`
+            <tr>
+              <td><em>"${escHtml(m.phrase)}"</em></td>
+              <td><span class="badge ${m.score>0?"b-p":"b-ng"}">${m.score>0?"+":""}${m.score}</span></td>
+              <td style="color:#57606a;font-size:12px">
+                ${m.negated?"<span class='tag t-mid'>Negasi</span> ":""}
+                ${m.intensified?"<span class='tag t-low'>Intensifier</span>":""}
+                ${!m.negated&&!m.intensified?"—":""}
+              </td>
+            </tr>`).join("")}
+          </tbody>
+        </table>` : `<p style="color:#9ca3af;font-size:13px;margin-top:8px">Tidak ada kata kunci spesifik yang terdeteksi. Analisis berbasis konteks umum.</p>`}
+      </div>
+    </div>
+
+    <!-- Section 2: Root Cause -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">2</span>
+        <span class="section-title">Root Cause &amp; Key Takeaways</span>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead><tr><th style="width:190px">Dimensi</th><th>Analisis</th></tr></thead>
+          <tbody>
+            ${rootCauseRows.map(row=>`<tr><td><strong>${row.dim}</strong></td><td>${row.val}</td></tr>`).join("")}
+          </tbody>
+        </table>
+        <ul class="finding-list" style="margin-top:14px">
+          ${findings.map(f=>`
+          <li>
+            <span class="fi fi-${f.type}">${f.type==="ok"?"✔":f.type==="warn"?"⚠":f.type==="bad"?"✖":"→"}</span>
+            <span>${f.text}</span>
+          </li>`).join("")}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Section 3: Action Plan -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">3</span>
+        <span class="section-title">Action Plan Berskala Prioritas</span>
+      </div>
+      <div class="section-body">
+        <table>
+          <thead><tr>
+            <th style="width:140px">Prioritas</th>
+            <th style="width:160px">Tindakan</th>
+            <th>Detail &amp; PIC</th>
+            <th style="width:90px">Target</th>
+          </tr></thead>
+          <tbody>
+            ${actionPlans.map(p=>`
+            <tr>
+              <td><span class="tag ${p.priority}">${p.label}</span></td>
+              <td><strong>${p.action}</strong></td>
+              <td>${p.detail}</td>
+              <td style="white-space:nowrap">${p.target}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 4: Draft Balasan -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">4</span>
+        <span class="section-title">Draft Balasan — Multi-Tone</span>
+      </div>
+      <div class="section-body">
+        <div class="reply-box">
+          <div class="reply-label">
+            <span>Opsi A</span>
+            <span class="tag t-mid">Empati &amp; Solutif — Formal</span>
+            <span style="color:#57606a;font-size:11px;font-weight:400">Email / Live Chat CS / Platform Resmi</span>
+          </div>
+          ${replies.formalBody}
+        </div>
+        <div class="reply-box">
+          <div class="reply-label">
+            <span>Opsi B</span>
+            <span class="tag t-low">Singkat &amp; Kasual</span>
+            <span style="color:#57606a;font-size:11px;font-weight:400">Media Sosial / Google Review / Marketplace</span>
+          </div>
+          <p>${replies.casualBody}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Bar -->
+    <div class="summary-bar">
+      <div class="sb-item">
+        <div class="sb-label">Status Kasus</div>
+        <div class="sb-value">
+          <span class="badge ${r.normalizedScore >= -0.3 ? "b-p" : "b-ng"}">
+            ${r.normalizedScore >= 0.5 ? "Closed — Positive" : r.normalizedScore >= -0.3 ? "Monitor — Neutral" : "Open — Needs Attention"}
+          </span>
+        </div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-label">Churn Risk</div>
+        <div class="sb-value" style="color:${churnColor}">${churnRisk}</div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-label">Advocacy Potential</div>
+        <div class="sb-value" style="color:#3b82d4">${advLabel}</div>
+      </div>
+      <div class="sb-item">
+        <div class="sb-label">NPS Projection</div>
+        <div class="sb-value" style="color:#7c5cd8">${npsLabel}</div>
+      </div>
+    </div>
+  `;
+
+  return html;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════════
+function escHtml(str) {
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ══════════════════════════════════════════════════════════════
+//  UI CONTROLLER
+// ══════════════════════════════════════════════════════════════
+const textarea  = document.getElementById("review-input");
+const btnAnalyze= document.getElementById("btn-analyze");
+const btnClear  = document.getElementById("btn-clear");
+const charCount = document.getElementById("char-count");
+const catSelect = document.getElementById("category-select");
+const reportDiv = document.getElementById("report");
+
+textarea.addEventListener("input", () => {
+  const len = textarea.value.trim().length;
+  charCount.textContent = len + " karakter";
+  btnAnalyze.disabled = len < 10;
+});
+
+btnClear.addEventListener("click", () => {
+  textarea.value = "";
+  charCount.textContent = "0 karakter";
+  btnAnalyze.disabled = true;
+  reportDiv.style.display = "none";
+  reportDiv.innerHTML = "";
+  document.querySelectorAll(".chip").forEach(c => c.classList.remove("chip-active"));
+});
+
+// Sample chips
+document.querySelectorAll(".chip[data-text]").forEach(chip => {
+  chip.addEventListener("click", () => {
+    // isi textarea & set kategori
+    textarea.value = chip.dataset.text;
+    charCount.textContent = chip.dataset.text.length + " karakter";
+    btnAnalyze.disabled = false;
+
+    const catMap = { service:"service", delivery:"delivery", product:"product", app:"app", billing:"billing" };
+    catSelect.value = catMap[chip.dataset.cat] || "auto";
+
+    // highlight chip aktif
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("chip-active"));
+    chip.classList.add("chip-active");
+
+    // scroll ke textarea & langsung analisis
+    textarea.scrollIntoView({ behavior:"smooth", block:"center" });
+    setTimeout(() => btnAnalyze.click(), 300);
+  });
+});
+
+btnAnalyze.addEventListener("click", () => {
+  const text = textarea.value.trim();
+  if (text.length < 10) return;
+
+  btnAnalyze.disabled = true;
+  btnAnalyze.textContent = "Menganalisis...";
+
+  // Simulasi delay singkat agar terasa responsif
+  setTimeout(() => {
+    const result = analyzeText(text, catSelect.value);
+    reportDiv.innerHTML = renderReport(text, result);
+    reportDiv.style.display = "block";
+    reportDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+    btnAnalyze.disabled = false;
+    btnAnalyze.textContent = "▶ Analisis Sekarang";
+  }, 400);
+});
+
+// Init state
+btnAnalyze.disabled = true;
+</script>
+</body>
+</html>
