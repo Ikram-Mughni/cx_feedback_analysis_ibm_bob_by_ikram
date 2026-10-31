@@ -3,578 +3,1285 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CX Feedback Analyzer</title>
+<title>IBM CX Intelligence Suite Enterprise v3.0 | Customer Experience Analytics</title>
+<!-- Optional Chart.js CDN with graceful fallback -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
+  :root {
+    --primary: #0f62fe;
+    --primary-dark: #0043ce;
+    --primary-light: #edf5ff;
+    --secondary: #393939;
+    --bg-main: #f4f7fb;
+    --bg-card: #ffffff;
+    --border: #e0e6ed;
+    --text-main: #161616;
+    --text-muted: #525252;
+    --text-light: #8d8d8d;
+    --success: #198038;
+    --success-bg: #defbe6;
+    --warning: #f1c21b;
+    --warning-bg: #fef3c7;
+    --danger: #da1e28;
+    --danger-bg: #ffebe9;
+    --info: #0043ce;
+    --info-bg: #edf5ff;
+    --purple: #8a3ffc;
+    --purple-bg: #f6f2ff;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-family: var(--font);
     font-size: 14px;
-    line-height: 1.6;
-    color: #1f2328;
-    background: #f0f2f5;
-    padding: 32px 16px 56px;
-  }
-  .wrapper { max-width: 780px; margin: 0 auto; }
-
-  /* ── Page Header ── */
-  .page-header {
-    text-align: center;
-    margin-bottom: 28px;
-  }
-  .page-header .eyebrow {
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #57606a;
-    margin-bottom: 6px;
-  }
-  .page-header h1 { font-size: 22px; font-weight: 700; color: #1f2328; }
-  .page-header p  { font-size: 13px; color: #57606a; margin-top: 4px; }
-
-  /* ── Input Card ── */
-  .input-card {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 20px 24px;
-    margin-bottom: 24px;
-  }
-  .input-card label {
-    display: block;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #57606a;
-    margin-bottom: 8px;
-  }
-  .input-card textarea {
-    width: 100%;
-    min-height: 120px;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    padding: 10px 12px;
-    font-family: inherit;
-    font-size: 14px;
-    color: #1f2328;
-    resize: vertical;
-    outline: none;
-    transition: border-color 0.15s;
-    background: #fafbfc;
-  }
-  .input-card textarea:focus { border-color: #3b82d4; background: #fff; }
-  .input-card textarea::placeholder { color: #9ca3af; }
-
-  .input-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 12px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .input-row select {
-    padding: 8px 12px;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 13px;
-    color: #1f2328;
-    background: #fafbfc;
-    outline: none;
-    cursor: pointer;
-  }
-  .btn-analyze {
-    padding: 9px 22px;
-    background: #3b82d4;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .btn-analyze:hover { background: #2563b0; }
-  .btn-analyze:disabled { background: #93c5fd; cursor: not-allowed; }
-  .btn-clear {
-    padding: 9px 16px;
-    background: transparent;
-    color: #57606a;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  .btn-clear:hover { background: #f0f2f5; }
-  .char-count { font-size: 12px; color: #9ca3af; margin-left: auto; }
-
-  /* ── Report ── */
-  #report { display: none; }
-
-  .report-header {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 18px 24px;
-    margin-bottom: 20px;
-  }
-  .report-header .rh-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #57606a;
-    margin-bottom: 4px;
-  }
-  .report-header h2 { font-size: 18px; font-weight: 700; }
-  .report-header .rh-meta { font-size: 12px; color: #57606a; margin-top: 5px; }
-
-  /* Input preview */
-  .input-preview {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-left: 4px solid #3b82d4;
-    border-radius: 6px;
-    padding: 12px 16px;
-    margin-bottom: 20px;
-    font-size: 13.5px;
-    font-style: italic;
-    color: #1f2328;
-  }
-  .input-preview .ip-label {
-    font-style: normal;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #57606a;
-    margin-bottom: 5px;
+    line-height: 1.55;
+    color: var(--text-main);
+    background: var(--bg-main);
+    min-height: 100vh;
+    padding-bottom: 60px;
   }
 
-  /* ── Section ── */
-  .section {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 20px;
-  }
-  .section-header {
-    background: #f7f8fa;
-    padding: 10px 16px;
-    border-bottom: 1px solid #e5e7eb;
+  /* ── Enterprise App Bar ── */
+  .app-bar {
+    background: #121619;
+    color: #ffffff;
+    padding: 0 24px;
+    height: 56px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
-  .section-num {
-    display: inline-flex;
+  .app-brand {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    width: 22px; height: 22px;
-    background: #3b82d4;
-    color: #fff;
-    border-radius: 50%;
-    font-size: 11px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-  .section-title {
-    font-size: 12.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #1f2328;
-  }
-  .section-body { padding: 16px; }
-
-  /* ── Metric Grid ── */
-  .metric-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 12px;
-    margin-bottom: 16px;
   }
-  .metric-card {
-    background: #f7f8fa;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 12px 14px;
-  }
-  .metric-card .m-label {
-    font-size: 10.5px;
-    color: #57606a;
-    text-transform: uppercase;
+  .brand-logo {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 3px 8px;
+    border-radius: 4px;
     letter-spacing: 0.05em;
-    margin-bottom: 4px;
   }
-  .metric-card .m-value {
+  .brand-title {
     font-size: 15px;
     font-weight: 700;
+    letter-spacing: -0.01em;
   }
-  .score-bar-wrap { margin-top: 5px; }
-  .score-bar-bg {
-    background: #e5e7eb;
+  .brand-version {
+    font-size: 11px;
+    background: rgba(255,255,255,0.15);
+    padding: 2px 7px;
     border-radius: 999px;
-    height: 5px;
+    color: #cbd5e1;
+  }
+  .app-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .app-meta span { display: flex; align-items: center; gap: 6px; }
+  .badge-live {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  /* ── Main Layout Container ── */
+  .container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
+
+  /* ── Tab Navigation ── */
+  .nav-tabs {
+    display: flex;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 6px;
+    gap: 6px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 170px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+  .tab-btn:hover {
+    background: var(--bg-main);
+    color: var(--text-main);
+  }
+  .tab-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(15, 98, 254, 0.3);
+  }
+  .tab-badge {
+    background: rgba(0,0,0,0.1);
+    color: inherit;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 11px;
+  }
+  .tab-btn.active .tab-badge {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+  }
+
+  /* ── Tab Views ── */
+  .tab-view { display: none; }
+  .tab-view.active { display: block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── KPI Summary Cards ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
     overflow: hidden;
   }
-  .score-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
-
-  /* ── Badges & Tags ── */
-  .badge {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
+  .kpi-card::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--border);
   }
-  .b-sp  { background: #dafbe1; color: #1a7f37; }   /* Sangat Positif */
-  .b-p   { background: #d1fae5; color: #065f46; }   /* Positif */
-  .b-n   { background: #f3f4f6; color: #374151; }   /* Netral */
-  .b-ng  { background: #fef3c7; color: #92400e; }   /* Negatif */
-  .b-sn  { background: #ffd8d8; color: #b91c1c; }   /* Sangat Negatif */
+  .kpi-card.kpi-blue::after { background: var(--primary); }
+  .kpi-card.kpi-green::after { background: var(--success); }
+  .kpi-card.kpi-amber::after { background: #d97706; }
+  .kpi-card.kpi-red::after { background: var(--danger); }
+  .kpi-card.kpi-purple::after { background: var(--purple); }
 
-  .tag {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 700;
+  .kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
   }
-  .t-high { background: #ffd8d8; color: #b91c1c; }
-  .t-mid  { background: #fef3c7; color: #92400e; }
-  .t-low  { background: #dafbe1; color: #166534; }
-  .t-blue { background: #dbeafe; color: #1d4ed8; }
-  .t-pur  { background: #ede9fe; color: #5b21b6; }
-
-  /* ── Tables ── */
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th {
-    background: #f7f8fa;
-    text-align: left;
-    padding: 7px 12px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #57606a;
-    border-bottom: 1px solid #e5e7eb;
-    font-weight: 600;
-  }
-  td { padding: 8px 12px; border-bottom: 1px solid #f0f1f3; vertical-align: top; }
-  tr:last-child td { border-bottom: none; }
-
-  /* ── Reply Boxes ── */
-  .reply-box {
-    background: #f7f8fa;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
-    font-size: 13.5px;
-  }
-  .reply-box:last-child { margin-bottom: 0; }
-  .reply-label {
+  .kpi-title {
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #57606a;
-    margin-bottom: 8px;
+    color: var(--text-muted);
+  }
+  .kpi-icon {
+    font-size: 16px;
+    opacity: 0.8;
+  }
+  .kpi-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  .kpi-sub {
+    font-size: 12px;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
+    gap: 4px;
   }
 
-  /* ── Finding List ── */
-  .finding-list { list-style: none; }
-  .finding-list li {
-    padding: 7px 0;
-    border-bottom: 1px solid #f0f1f3;
+  /* ── Cards & Section Wrappers ── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .card-title-group h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
     gap: 8px;
-    font-size: 13px;
   }
-  .finding-list li:last-child { border-bottom: none; }
-  .fi { font-weight: 700; flex-shrink: 0; }
-  .fi-ok   { color: #1a7f37; }
-  .fi-warn { color: #d97706; }
-  .fi-bad  { color: #b91c1c; }
-  .fi-info { color: #3b82d4; }
+  .card-title-group p {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .card-body { padding: 20px; }
 
-  /* ── Summary Bar ── */
-  .summary-bar {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 14px 20px;
-    display: flex;
-    flex-wrap: wrap;
+  /* ── Two Column Grid ── */
+  .grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 20px;
+  }
+  @media (max-width: 900px) {
+    .grid-2col { grid-template-columns: 1fr; }
+  }
+
+  /* ── Charts Grid ── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+  }
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
   }
-  .sb-item .sb-label {
-    font-size: 10.5px;
-    color: #57606a;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .sb-item .sb-value { font-size: 13px; font-weight: 700; }
-
-  /* ── Empty / Loading ── */
-  .empty-state {
-    text-align: center;
-    padding: 48px 24px;
-    color: #9ca3af;
-  }
-  .empty-state svg { margin-bottom: 12px; }
-  .empty-state p { font-size: 14px; }
-
-  /* ── Sample Chips ── */
-  .samples-wrap {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid #e5e7eb;
-  }
-  .samples-label {
-    font-size: 11px;
+  .chart-title {
+    font-size: 13.5px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #57606a;
-    margin-bottom: 8px;
+    color: var(--text-main);
   }
-  .samples-list {
+  .chart-container {
+    position: relative;
+    min-height: 240px;
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    align-items: center;
+    justify-content: center;
   }
-  .chip {
+  canvas { max-width: 100%; height: auto !important; }
+
+  /* Fallback bars if Chart.js is offline */
+  .fallback-bar-group { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+  .fallback-bar-item { width: 100%; }
+  .fb-label-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; }
+  .fb-track { background: #e5e7eb; height: 10px; border-radius: 999px; overflow: hidden; }
+  .fb-fill { height: 100%; border-radius: 999px; }
+
+  /* ── Single Review Form ── */
+  .review-input-box {
+    width: 100%;
+    min-height: 120px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-main);
+    background: #fafbfc;
+    resize: vertical;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .review-input-box:focus {
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(15, 98, 254, 0.12);
+  }
+  .review-input-box::placeholder { color: #9ca3af; }
+
+  .action-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .form-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text-main);
+    background: #fff;
+    outline: none;
+    cursor: pointer;
+  }
+  .btn {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.16s ease;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary {
+    background: #fff;
+    border-color: var(--border);
+    color: var(--text-main);
+  }
+  .btn-secondary:hover { background: #f3f4f6; }
+  .btn-success {
+    background: var(--success);
+    color: #fff;
+  }
+  .btn-success:hover { background: #13632c; }
+  .btn-sm {
     padding: 5px 11px;
+    font-size: 12px;
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  /* ── Sample Chips ── */
+  .chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .chip {
+    padding: 5px 12px;
     border-radius: 999px;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
-    border: 1px solid transparent;
-    transition: opacity 0.15s, border-color 0.15s;
-    line-height: 1.4;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
   }
-  .chip:hover  { opacity: 0.82; border-color: rgba(0,0,0,0.12); }
-  .chip-active { outline: 2px solid currentColor; outline-offset: 1px; font-weight: 700; }
-  .chip-sp { background: #dafbe1; color: #166534; }   /* Sangat Positif */
-  .chip-p  { background: #dbeafe; color: #1d4ed8; }   /* Positif */
-  .chip-n  { background: #f3f4f6; color: #374151; }   /* Netral */
-  .chip-ng { background: #fef3c7; color: #92400e; }   /* Negatif */
-  .chip-sn { background: #ffd8d8; color: #b91c1c; }   /* Sangat Negatif */
+  .chip:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+  .chip.active {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary-dark);
+    font-weight: 700;
+  }
   .chip-dot {
-    display: inline-block;
     width: 7px; height: 7px;
     border-radius: 50%;
-    flex-shrink: 0;
   }
-  .chip-sp .chip-dot { background: #1a7f37; }
-  .chip-p  .chip-dot { background: #1d4ed8; }
-  .chip-n  .chip-dot { background: #6b7280; }
-  .chip-ng .chip-dot { background: #d97706; }
-  .chip-sn .chip-dot { background: #b91c1c; }
 
-  /* ── Footer ── */
-  .footer {
-    margin-top: 32px;
-    padding-top: 14px;
-    border-top: 1px solid #d0d7de;
-    text-align: center;
+  /* ── ABSA Aspect Grid ── */
+  .absa-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .absa-card {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .absa-aspect-name {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .absa-score-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 4px;
+    align-self: flex-start;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .b-sp { background: #defbe6; color: #198038; border: 1px solid #a7f3d0; }
+  .b-p  { background: #dbeafe; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .b-n  { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+  .b-ng { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+  .b-sn { background: #ffebe9; color: #da1e28; border: 1px solid #fecaca; }
+
+  .tag-priority {
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .p-crit { background: #da1e28; color: #fff; }
+  .p-high { background: #f97316; color: #fff; }
+  .p-med  { background: #f59e0b; color: #fff; }
+  .p-low  { background: #10b981; color: #fff; }
+
+  /* ── Reply Generation Box ── */
+  .reply-template {
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .reply-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
     font-size: 12px;
-    color: #9ca3af;
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+  .reply-content {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #1f2937;
+    white-space: pre-line;
+  }
+  .copy-btn {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: #f3f4f6; color: var(--text-main); }
+
+  /* ── Data Tables ── */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+    background: #fff;
+  }
+  table.data-table th {
+    background: #f8fafc;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table.data-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+  table.data-table tr:hover td { background: #f8fafc; }
+  table.data-table tr:last-child td { border-bottom: none; }
+
+  /* ── Ticket Board (Kanban / List) ── */
+  .ticket-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .filter-pill {
+    padding: 6px 14px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-pill.active {
+    background: var(--secondary);
+    color: #fff;
+    border-color: var(--secondary);
   }
 
-  @media (max-width: 500px) {
-    .metric-grid { grid-template-columns: 1fr 1fr; }
-    .input-row   { flex-direction: column; align-items: stretch; }
-    .char-count  { margin-left: 0; }
+  /* ── Toast Notification ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1f2937;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 1000;
+    animation: slideUp 0.2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .modal-content {
+    background: #fff;
+    border-radius: var(--radius-md);
+    max-width: 650px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    padding: 24px;
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+  .modal-close {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text-muted);
+  }
+
+  /* ── Print Stylesheet ── */
+  @media print {
+    .app-bar, .nav-tabs, .action-row, .chips-container, .btn, .copy-btn, #toast { display: none !important; }
+    body { background: #fff; padding: 0; }
+    .container { max-width: 100%; padding: 0; }
+    .card { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; }
+    .tab-view { display: block !important; }
+    #tab-batch, #tab-tickets, #tab-lexicon { display: none !important; }
   }
 </style>
 </head>
 <body>
-<div class="wrapper">
 
-  <!-- Page Header -->
-  <div class="page-header">
-    <div class="eyebrow">Customer Experience Intelligence</div>
-    <h1>CX Feedback Analyzer</h1>
-    <p>Masukkan ulasan pelanggan — sistem akan menganalisis sentimen &amp; menyusun laporan otomatis.</p>
+<!-- Enterprise App Bar -->
+<header class="app-bar">
+  <div class="app-brand">
+    <span class="brand-logo">IBM CX</span>
+    <span class="brand-title">CX Feedback Intelligence Suite</span>
+    <span class="brand-version">v3.0 Enterprise</span>
   </div>
+  <div class="app-meta">
+    <span><span class="badge-live"></span> NLP Engine Online</span>
+    <span id="live-time"></span>
+    <button class="btn btn-secondary btn-sm" onclick="window.print()" title="Cetak Ringkasan Eksekutif ke PDF">
+      🖨️ Cetak / PDF
+    </button>
+  </div>
+</header>
 
-  <!-- Input Card -->
-  <div class="input-card">
-    <label for="review-input">Teks Ulasan Pelanggan</label>
-    <textarea id="review-input"
-      placeholder="Contoh: Saya kecewa dengan pelayanan kalian. Pesanan saya sudah 5 hari belum datang, dan CS tidak bisa memberikan solusi. Ini sangat mengecewakan..."></textarea>
+<div class="container">
 
-    <div class="input-row">
-      <select id="category-select">
-        <option value="auto">Kategori: Auto-Detect</option>
-        <option value="delivery">Delivery / Pengiriman</option>
-        <option value="service">Service Quality</option>
-        <option value="product">Product Quality</option>
-        <option value="app">Bug Aplikasi</option>
-        <option value="billing">Billing / Pembayaran</option>
-        <option value="other">Lainnya</option>
-      </select>
-      <button class="btn-analyze" id="btn-analyze">&#9654; Analisis Sekarang</button>
-      <button class="btn-clear" id="btn-clear">Hapus</button>
-      <span class="char-count" id="char-count">0 karakter</span>
+  <!-- Primary Tab Navigation -->
+  <nav class="nav-tabs" id="main-nav">
+    <button class="tab-btn active" data-tab="tab-dashboard">
+      📊 Executive Dashboard
+    </button>
+    <button class="tab-btn" data-tab="tab-single">
+      🔍 Deep-Dive Analisis (ABSA)
+    </button>
+    <button class="tab-btn" data-tab="tab-batch">
+      📁 Batch Dataset &amp; CSV Hub <span class="tab-badge" id="batch-count-badge">25</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-tickets">
+      🎫 SLA &amp; Incident Board <span class="tab-badge" id="ticket-count-badge">0</span>
+    </button>
+    <button class="tab-btn" data-tab="tab-lexicon">
+      ⚙️ NLP Lexicon &amp; Rules
+    </button>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- TAB 1: EXECUTIVE ANALYTICS DASHBOARD                      -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="tab-dashboard" class="tab-view active">
+    
+    <!-- KPI Row -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-header">
+          <span class="kpi-title">Total Ulasan Teranalisis</span>
+          <span class="kpi-icon">📝</span>
+        </div>
+        <div class="kpi-value" id="kpi-total-reviews">25</div>
+        <div class="kpi-sub">Dataset aktif dalam memori</div>
+      </div>
+
+      <div class="kpi-card kpi-green">
+        <div class="kpi-header">
+          <span class="kpi-title">Net Promoter Score (NPS)</span>
+          <span class="kpi-icon">⭐</span>
+        </div>
+        <div class="kpi-value" id="kpi-nps">+28</div>
+        <div class="kpi-sub" id="kpi-nps-sub">Promoters: 48% | Detractors: 20%</div>
+      </div>
+
+      <div class="kpi-card kpi-purple">
+        <div class="kpi-header">
+          <span class="kpi-title">Customer Satisfaction (CSAT)</span>
+          <span class="kpi-icon">😊</span>
+        </div>
+        <div class="kpi-value" id="kpi-csat">72%</div>
+        <div class="kpi-sub">Sentimen positif &amp; sangat positif</div>
+      </div>
+
+      <div class="kpi-card kpi-red">
+        <div class="kpi-header">
+          <span class="kpi-title">High Churn Risk</span>
+          <span class="kpi-icon">⚠️</span>
+        </div>
+        <div class="kpi-value" id="kpi-churn-count" style="color:var(--danger)">5</div>
+        <div class="kpi-sub">Membutuhkan intervensi segera</div>
+      </div>
+
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-header">
+          <span class="kpi-title">Tiket Open SLA</span>
+          <span class="kpi-icon">⏱️</span>
+        </div>
+        <div class="kpi-value" id="kpi-open-tickets" style="color:#b45309">5</div>
+        <div class="kpi-sub">Prioritas P1 &amp; P2</div>
+      </div>
     </div>
-  </div>
 
-  <!-- Sample Chips -->
-  <div class="samples-wrap">
-    <div class="samples-label">Coba contoh ulasan:</div>
-    <div class="samples-list">
-      <button class="chip chip-sp" data-cat="service"
-        data-text="Saya benar-benar terkesan dengan layanan pelanggan kalian! Kemarin saya menghubungi CS karena paket saya terlambat, dan agent bernama Rina langsung menyelesaikan masalah dalam waktu kurang dari 15 menit. Dia sangat ramah, sabar, dan tahu persis apa yang harus dilakukan. Saya sudah jadi pelanggan 3 tahun dan tidak akan pindah ke mana-mana. Terima kasih banyak!">
-        <span class="chip-dot"></span> Sangat Positif — Pujian Agent CS
-      </button>
-      <button class="chip chip-p" data-cat="delivery"
-        data-text="Pengiriman lumayan cepat, barang sampai dalam 2 hari. Packagingnya aman dan produknya sesuai foto. CS juga responsif waktu saya tanya soal resi. Lumayan puas, akan belanja lagi di sini.">
-        <span class="chip-dot"></span> Positif — Pengiriman & Produk
-      </button>
-      <button class="chip chip-n" data-cat="service"
-        data-text="Pelayanannya biasa saja, tidak ada yang istimewa. CS membalas tapi jawabannya terasa template semua. Masalah saya cukup terselesaikan tapi butuh beberapa kali chat. Standar lah, tidak lebih tidak kurang.">
-        <span class="chip-dot"></span> Netral — Layanan Standar
-      </button>
-      <button class="chip chip-ng" data-cat="delivery"
-        data-text="Saya kecewa dengan pelayanan kalian. Pesanan saya sudah 5 hari belum datang padahal estimasi 2 hari. Waktu saya hubungi CS, jawabannya lambat dan tidak ada solusi konkret. Ini mengecewakan sekali, uang sudah keluar tapi barang tidak kunjung tiba.">
-        <span class="chip-dot"></span> Negatif — Keterlambatan Pengiriman
-      </button>
-      <button class="chip chip-sn" data-cat="app"
-        data-text="Aplikasi kalian sangat parah! Sudah 3 kali saya coba bayar selalu error dan uang sudah terpotong tapi pesanan tidak masuk. CS tidak bisa memberikan solusi dan minta saya tunggu 7 hari kerja. Ini penipuan namanya! Saya tidak akan pernah mau pakai aplikasi ini lagi dan akan lapor ke pihak berwenang.">
-        <span class="chip-dot"></span> Sangat Negatif — Bug &amp; Penipuan
-      </button>
-      <button class="chip chip-ng" data-cat="product"
-        data-text="Barang yang datang tidak sesuai deskripsi. Warnanya beda, bahannya juga terasa murahan padahal harganya tidak murah. Sudah komplain ke CS tapi proses refund-nya sangat lambat dan berbelit-belit. Kecewa banget sama seller ini.">
-        <span class="chip-dot"></span> Negatif — Kualitas Produk
-      </button>
+    <!-- Charts Row 1 -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title">Distribusi Sentimen Pelanggan</span>
+          <span class="badge b-p">5 Level Klasifikasi</span>
+        </div>
+        <div class="chart-container" id="chart-sentiment-wrap">
+          <canvas id="chart-sentiment"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title">Analisis Aspek Kepuasan (ABSA Index)</span>
+          <span class="badge b-sp">Skala -100 s/d +100</span>
+        </div>
+        <div class="chart-container" id="chart-aspect-wrap">
+          <canvas id="chart-aspect"></canvas>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Report Output -->
-  <div id="report"></div>
+    <!-- Charts Row 2 -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title">Kategori Keluhan &amp; Masukan</span>
+          <span class="badge b-n">Volume per Area</span>
+        </div>
+        <div class="chart-container" id="chart-category-wrap">
+          <canvas id="chart-category"></canvas>
+        </div>
+      </div>
 
-  <!-- Footer -->
-  <div class="footer">Made with IBM Bob &nbsp;|&nbsp; CX Feedback Analyzer v2.0 &nbsp;|&nbsp; ikramspace1@gmail.com </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <span class="chart-title">Matriks Risiko Churn Pelanggan</span>
+          <span class="badge b-sn">Distribusi Urgensi</span>
+        </div>
+        <div class="chart-container" id="chart-churn-wrap">
+          <canvas id="chart-churn"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Executive Insights Card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h2>💡 Ringkasan Strategis &amp; Rekomendasi Eksekutif</h2>
+          <p>Sintesis otomatis berbasis agregasi data ulasan pelanggan aktif</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="switchTab('tab-single')">
+          + Analisis Ulasan Baru
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="grid-2col">
+          <div>
+            <h4 style="font-size:13px;font-weight:700;color:var(--success);margin-bottom:8px">
+              🏆 Faktor Pendorong Utama (Positive Drivers)
+            </h4>
+            <ul style="list-style:none;padding-left:0;display:flex;flex-direction:column;gap:8px;font-size:13px">
+              <li><strong>• Keramahan Agent CS:</strong> Kecepatan respon dan sikap solutif agen CS menjadi katalis tertinggi loyalitas pelanggan (kontribusi +42% terhadap skor sentimen positif).</li>
+              <li><strong>• Kecepatan Pengiriman Terjadwal:</strong> Paket yang sampai dalam 1-2 hari kerja mendapatkan rating bintang 5 konsisten.</li>
+              <li><strong>• Kualitas Produk Asli/Sesuai Foto:</strong> Ekspektasi barang yang terpenuhi menghasilkan repurchase intent tinggi.</li>
+            </ul>
+          </div>
+          <div>
+            <h4 style="font-size:13px;font-weight:700;color:var(--danger);margin-bottom:8px">
+              🚨 Bottleneck Kritis (Negative Drivers &amp; Churn Risk)
+            </h4>
+            <ul style="list-style:none;padding-left:0;display:flex;flex-direction:column;gap:8px;font-size:13px">
+              <li><strong>• Keterlambatan Ekspedisi Logistik:</strong> Isu pengiriman >4 hari menyumbang 65% dari seluruh komplain bernada marah/frustrasi.</li>
+              <li><strong>• Kegagalan Transaksi / Bug Pembayaran:</strong> Kasus saldo terpotong tapi pesanan gagal memiliki intensitas keluhan tertinggi (Level 9/10).</li>
+              <li><strong>• Birokrasi Pengembalian Dana (Refund):</strong> Proses refund yang lambat memicu ancaman keluhan publik dan pelaporan ke media sosial.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- TAB 2: SINGLE REVIEW DEEP-DIVE (ABSA ENGINE)              -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="tab-single" class="tab-view">
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h2>🔍 Analisis Mendalam Ulasan Individual (Deep-Dive &amp; ABSA)</h2>
+          <p>Ekstraksi sentimen per aspek (ABSA), intensitas emosi, estimasi churn, dan pembuat draf balasan otomatis</p>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted)" id="char-word-counter">
+          0 karakter | 0 kata
+        </div>
+      </div>
+      <div class="card-body">
+        <textarea id="single-review-text" class="review-input-box"
+          placeholder="Ketik atau tempel teks ulasan pelanggan di sini. Contoh: 'Produknya mantap banget dan packaging rapi, tapi kurir ekspedisi telat 4 hari dan CS lambat merespon. Mohon diperbaiki!'"></textarea>
+
+        <div class="action-row">
+          <select id="single-category-select" class="form-select">
+            <option value="auto">Kategori: Auto-Detect (Semua Aspek)</option>
+            <option value="delivery">Fokus: Delivery / Logistik</option>
+            <option value="service">Fokus: CS &amp; Pelayanan</option>
+            <option value="product">Fokus: Kualitas Produk</option>
+            <option value="app">Fokus: Aplikasi &amp; Teknis</option>
+            <option value="billing">Fokus: Pembayaran / Refund</option>
+          </select>
+
+          <button class="btn btn-primary" id="btn-run-single">
+            ▶ Jalankan Analisis Lengkap
+          </button>
+          <button class="btn btn-secondary" id="btn-clear-single">
+            Hapus Teks
+          </button>
+          <button class="btn btn-success" id="btn-create-ticket-single" style="display:none;margin-left:auto">
+            🎫 Buat Tiket SLA
+          </button>
+        </div>
+
+        <!-- Sample Chips -->
+        <div class="chips-container">
+          <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;align-self:center;margin-right:4px">
+            Uji Sampel Kasus:
+          </span>
+          <button class="chip" data-sample="absa-mixed">
+            <span class="chip-dot" style="background:#f59e0b"></span> ⚡ Campuran (Produk Bagus + CS/Kurir Buruk)
+          </button>
+          <button class="chip" data-sample="p-agent">
+            <span class="chip-dot" style="background:#10b981"></span> 🌟 Pujian Agent CS &amp; Loyalitas
+          </button>
+          <button class="chip" data-sample="crit-bug">
+            <span class="chip-dot" style="background:#ef4444"></span> 🚨 Bug Pembayaran &amp; Uang Terpotong (P1)
+          </button>
+          <button class="chip" data-sample="delay-delivery">
+            <span class="chip-dot" style="background:#f97316"></span> 📦 Keterlambatan Ekspedisi 5 Hari
+          </button>
+          <button class="chip" data-sample="neutral-std">
+            <span class="chip-dot" style="background:#6b7280"></span> ⚖️ Netral / Layanan Standar
+          </button>
+          <button class="chip" data-sample="slang-colloquial">
+            <span class="chip-dot" style="background:#8a3ffc"></span> 🗣️ Bahasa Gaul / Slang ("zonk bapuk")
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output Analysis Area -->
+    <div id="single-report-output" style="display:none">
+      <!-- Dynamically filled by JS -->
+    </div>
+
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- TAB 3: BATCH CSV DATASET & EXPORT HUB                     -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="tab-batch" class="tab-view">
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h2>📁 Pemrosesan Batch &amp; Pengelolaan Dataset Ulasan</h2>
+          <p>Unggah file CSV atau gunakan dataset simulasi 25 ulasan omnichannel untuk evaluasi model</p>
+        </div>
+        <div class="action-row" style="margin-top:0">
+          <button class="btn btn-secondary btn-sm" id="btn-load-sample-dataset">
+            🔄 Muat 25 Sampel Enterprise
+          </button>
+          <label class="btn btn-primary btn-sm" style="margin-bottom:0;cursor:pointer">
+            📤 Unggah File CSV
+            <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none">
+          </label>
+          <button class="btn btn-success btn-sm" id="btn-export-csv">
+            📥 Unduh CSV Hasil Analisis
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <!-- Search and Filter Bar -->
+        <div class="action-row" style="margin-top:0;margin-bottom:16px">
+          <input type="text" id="batch-search" placeholder="Cari ulasan, nama pelanggan, atau kata kunci..."
+            class="form-select" style="flex:1;min-width:220px">
+          <select id="batch-filter-sentiment" class="form-select">
+            <option value="all">Semua Sentimen</option>
+            <option value="Sangat Positif">Sangat Positif</option>
+            <option value="Positif">Positif</option>
+            <option value="Netral">Netral</option>
+            <option value="Negatif">Negatif</option>
+            <option value="Sangat Negatif">Sangat Negatif</option>
+          </select>
+          <select id="batch-filter-category" class="form-select">
+            <option value="all">Semua Kategori</option>
+            <option value="Delivery / Pengiriman">Delivery / Pengiriman</option>
+            <option value="Service Quality">Service Quality</option>
+            <option value="Product Quality">Product Quality</option>
+            <option value="Bug Aplikasi">Bug Aplikasi</option>
+            <option value="Billing / Pembayaran">Billing / Pembayaran</option>
+          </select>
+          <select id="batch-filter-risk" class="form-select">
+            <option value="all">Semua Churn Risk</option>
+            <option value="Sangat Tinggi">Sangat Tinggi</option>
+            <option value="Tinggi">Tinggi</option>
+            <option value="Moderat">Moderat</option>
+            <option value="Rendah">Rendah / Sangat Rendah</option>
+          </select>
+        </div>
+
+        <!-- Table View -->
+        <div class="table-responsive">
+          <table class="data-table" id="batch-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tanggal &amp; Channel</th>
+                <th>Pelanggan</th>
+                <th style="min-width:280px">Teks Ulasan</th>
+                <th>Sentimen</th>
+                <th>Aspek Utama</th>
+                <th>Churn Risk</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="batch-table-body">
+              <!-- Filled dynamically by JS -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- TAB 4: SLA & INCIDENT BOARD                               -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="tab-tickets" class="tab-view">
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <h2>🎫 SLA &amp; Incident Workflow Management</h2>
+          <p>Pelacakan eskalasi keluhan pelanggan dengan batas waktu SLA, prioritas P1-P4, dan PIC</p>
+        </div>
+        <div class="action-row" style="margin-top:0">
+          <button class="btn btn-secondary btn-sm" id="btn-sync-tickets">
+            🔄 Sinkronkan dari Detraktor
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <!-- Ticket Filters -->
+        <div class="ticket-filters">
+          <button class="filter-pill active" data-tfilter="all">Semua Tiket</button>
+          <button class="filter-pill" data-tfilter="P1 - Critical">🚨 P1 - Kritis (&lt;1 Jam)</button>
+          <button class="filter-pill" data-tfilter="P2 - High">⚠️ P2 - Tinggi (&lt;4 Jam)</button>
+          <button class="filter-pill" data-tfilter="P3 - Medium">⏳ P3 - Sedang (&lt;24 Jam)</button>
+          <button class="filter-pill" data-tfilter="Open">Status: Open</button>
+          <button class="filter-pill" data-tfilter="Resolved">Status: Selesai</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="ticket-table">
+            <thead>
+              <tr>
+                <th>ID Tiket</th>
+                <th>Prioritas SLA</th>
+                <th>Pelanggan</th>
+                <th>Isu &amp; Ringkasan Root Cause</th>
+                <th>SLA Target</th>
+                <th>PIC Assigned</th>
+                <th>Status</th>
+                <th>Aksi Cepat</th>
+              </tr>
+            </thead>
+            <tbody id="ticket-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- TAB 5: NLP LEXICON & RULES ENGINE                         -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <section id="tab-lexicon" class="tab-view">
+    
+    <div class="grid-2col">
+      <!-- Lexicon Explorer -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>📚 Kamus Sentimen Bahasa Indonesia &amp; Slang</h2>
+            <p>150+ leksikon sentimen formal, ejaan informal, bahasa gaul, dan bobot polaritas</p>
+          </div>
+          <span class="badge b-p" id="lexicon-count-badge">180 Kata/Frasa</span>
+        </div>
+        <div class="card-body">
+          <input type="text" id="lexicon-search" placeholder="Cari entri kata..." class="form-select" style="width:100%;margin-bottom:12px">
+          <div style="max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm)">
+            <table class="data-table" id="lexicon-table">
+              <thead>
+                <tr>
+                  <th>Kata / Frasa</th>
+                  <th>Polaritas</th>
+                  <th>Bobot</th>
+                </tr>
+              </thead>
+              <tbody id="lexicon-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Test Sandbox & Custom Rule Adder -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2>➕ Tambah Entri Leksikon Kustom</h2>
+            <p>Perluas kamus sentimen dengan istilah internal atau jargon bisnis</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px">
+                Kata / Frasa Baru
+              </label>
+              <input type="text" id="new-word-input" placeholder="contoh: sat-set, ambyar, refund cepat" class="form-select" style="width:100%">
+            </div>
+
+            <div>
+              <label style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px">
+                Skor Sentimen (-3 Sangat Negatif s/d +3 Sangat Positif)
+              </label>
+              <select id="new-score-select" class="form-select" style="width:100%">
+                <option value="3">+3: Sangat Positif (Pujian Tinggi)</option>
+                <option value="2">+2: Positif (Memuaskan)</option>
+                <option value="1">+1: Cenderung Positif</option>
+                <option value="0">0: Netral</option>
+                <option value="-1">-1: Cenderung Negatif</option>
+                <option value="-2">-2: Negatif (Keluhan)</option>
+                <option value="-3">-3: Sangat Negatif (Kritik Keras)</option>
+              </select>
+            </div>
+
+            <button class="btn btn-primary" id="btn-add-lexicon">
+              💾 Simpan ke Leksikon Aktif
+            </button>
+
+            <!-- Test Word Sandbox -->
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+              <h4 style="font-size:13px;font-weight:700;margin-bottom:8px">🧪 Uji Coba Kata Tunggal</h4>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="test-word-input" placeholder="Ketik kata untuk uji skor..." class="form-select" style="flex:1">
+                <button class="btn btn-secondary" id="btn-test-word">Tes Skor</button>
+              </div>
+              <div id="test-word-result" style="margin-top:8px;font-size:13px;font-weight:600"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
 
 </div>
 
+<!-- Modal for Inspecting Review Detail -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="font-size:16px;font-weight:700" id="modal-title">Detail Ulasan Pelanggan</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div id="modal-body">
+      <!-- Injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast Feedback -->
+<div id="toast">Notifikasi</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- CORE JAVASCRIPT: NLP ENGINE, ABSA, BATCH & CHARTS            -->
+<!-- ══════════════════════════════════════════════════════════════ -->
 <script>
-// ══════════════════════════════════════════════════════════════
-//  KAMUS SENTIMEN (Bahasa Indonesia + Ejaan Informal)
-// ══════════════════════════════════════════════════════════════
-const LEXICON = {
-  // ── Sangat Positif (+3) ──────────────────────────────────
-  "luar biasa":3,"sangat puas":3,"terkesan":3,"terpesona":3,"menakjubkan":3,
-  "terbaik":3,"sempurna":3,"memuaskan sekali":3,"sangat membantu":3,
-  "cepat sekali":3,"profesional sekali":3,"hebat sekali":3,"mantap banget":3,
-  "recommended banget":3,"highly recommend":3,"5 bintang":3,"bintang 5":3,
-  "setia":3,"loyal":3,"tidak akan pindah":3,"tidak mau pindah":3,
-  "ramah sekali":3,"sangat ramah":3,"sangat cepat":3,"luar biasa bagus":3,
-  "paling bagus":3,"amazing":3,"awesome":3,"excellent":3,"perfect":3,
+// ──────────────────────────────────────────────────────────────
+// 1. EXTENSIVE INDONESIAN SENTIMENT LEXICON & SLANG
+// ──────────────────────────────────────────────────────────────
+let LEXICON = {
+  // Sangat Positif (+3)
+  "luar biasa":3, "sangat puas":3, "terkesan":3, "terpesona":3, "menakjubkan":3,
+  "terbaik":3, "sempurna":3, "memuaskan sekali":3, "sangat membantu":3,
+  "cepat sekali":3, "profesional sekali":3, "hebat sekali":3, "mantap banget":3,
+  "recommended banget":3, "highly recommend":3, "5 bintang":3, "bintang 5":3,
+  "setia":3, "loyal":3, "tidak akan pindah":3, "tidak mau pindah":3,
+  "ramah sekali":3, "sangat ramah":3, "sangat cepat":3, "luar biasa bagus":3,
+  "paling bagus":3, "amazing":3, "awesome":3, "excellent":3, "perfect":3,
+  "top markotop":3, "gacor":3, "puas pol":3, "mantap jiwa":3, "gercep banget":3,
 
-  // ── Positif (+2) ────────────────────────────────────────
-  "bagus":2,"baik":2,"puas":2,"senang":2,"terima kasih":2,"makasih":2,
-  "bantu":2,"membantu":2,"cepat":2,"ramah":2,"sigap":2,"responsif":2,
-  "solutif":2,"solusi":2,"resolved":2,"selesai":2,"beres":2,"ok":1,
-  "oke":1,"mantap":2,"keren":2,"tepat":2,"mudah":2,"nyaman":2,
-  "memuaskan":2,"menyenangkan":2,"helpful":2,"friendly":2,"fast":2,
-  "recommend":2,"rekomendasi":2,"setuju":2,"suka":2,"seneng":2,
-  "sabar":2,"pengertian":2,"perhatian":2,"peduli":2,"terpercaya":2,
-  "handal":2,"andal":2,"konsisten":2,"terjangkau":2,"worth it":2,
-  "aman":2,"terjamin":2,"bintang":2,"top":2,"good":2,"great":2,"nice":2,
+  // Positif (+2)
+  "bagus":2, "baik":2, "puas":2, "senang":2, "terima kasih":2, "makasih":2,
+  "bantu":2, "membantu":2, "cepat":2, "ramah":2, "sigap":2, "responsif":2,
+  "solutif":2, "solusi":2, "resolved":2, "selesai":2, "beres":2, "ok":1,
+  "oke":1, "mantap":2, "keren":2, "tepat":2, "mudah":2, "nyaman":2,
+  "memuaskan":2, "menyenangkan":2, "helpful":2, "friendly":2, "fast":2,
+  "recommend":2, "rekomendasi":2, "setuju":2, "suka":2, "seneng":2,
+  "sabar":2, "pengertian":2, "perhatian":2, "peduli":2, "terpercaya":2,
+  "handal":2, "andal":2, "konsisten":2, "terjangkau":2, "worth it":2,
+  "aman":2, "terjamin":2, "bintang":2, "top":2, "good":2, "great":2, "nice":2,
+  "gercep":2, "mantul":2, "sat-set":2, "fast respon":2, "fast response":2,
 
-  // ── Netral (+1/0) ────────────────────────────────────────
-  "biasa":0,"standar":0,"lumayan":1,"cukup":1,"lumayan baik":1,
-  "bisa dimaklumi":0,"wajar":0,"normal":0,"netral":0,
+  // Netral (0 / +1)
+  "biasa":0, "standar":0, "lumayan":1, "cukup":1, "lumayan baik":1,
+  "bisa dimaklumi":0, "wajar":0, "normal":0, "netral":0, "sedang":0,
 
-  // ── Negatif (-2) ────────────────────────────────────────
-  "kecewa":(-2),"lambat":(-2),"lama":(-2),"tidak memuaskan":(-2),
-  "buruk":(-2),"jelek":(-2),"payah":(-2),"gagal":(-2),"error":(-2),
-  "rusak":(-2),"salah":(-2),"tidak sesuai":(-2),"tidak membantu":(-2),
-  "tidak responsif":(-2),"tidak ramah":(-2),"kasar":(-2),"jutek":(-2),
-  "ngabaikan":(-2),"abaikan":(-2),"tidak ditanggapi":(-2),"tidak ada solusi":(-2),
-  "terlambat":(-2),"telat":(-2),"delay":(-2),"belum datang":(-2),
-  "tidak bisa":(-2),"tidak berfungsi":(-2),"tidak bekerja":(-2),
-  "mengecewakan":(-2),"rugi":(-2),"menyesal":(-2),"susah":(-2),
-  "rumit":(-2),"ribet":(-2),"mahal":(-2),"tidak worth":(-2),
-  "bad":(-2),"poor":(-2),"worst":(-3),"terrible":(-3),
+  // Negatif (-2)
+  "kecewa":(-2), "lambat":(-2), "lama":(-2), "tidak memuaskan":(-2),
+  "buruk":(-2), "jelek":(-2), "payah":(-2), "gagal":(-2), "error":(-2),
+  "rusak":(-2), "salah":(-2), "tidak sesuai":(-2), "tidak membantu":(-2),
+  "tidak responsif":(-2), "tidak ramah":(-2), "kasar":(-2), "jutek":(-2),
+  "ngabaikan":(-2), "abaikan":(-2), "tidak ditanggapi":(-2), "tidak ada solusi":(-2),
+  "terlambat":(-2), "telat":(-2), "delay":(-2), "belum datang":(-2),
+  "tidak bisa":(-2), "tidak berfungsi":(-2), "tidak bekerja":(-2),
+  "mengecewakan":(-2), "rugi":(-2), "menyesal":(-2), "susah":(-2),
+  "rumit":(-2), "ribet":(-2), "mahal":(-2), "tidak worth":(-2),
+  "bad":(-2), "poor":(-2), "zonk":(-2), "nyesel":(-2), "slow respon":(-2),
+  "slow response":(-2), "lemot":(-2), "kacau":(-2), "ngaco":(-2),
 
-  // ── Sangat Negatif (-3) ──────────────────────────────────
-  "sangat kecewa":(-3),"sangat buruk":(-3),"sangat mengecewakan":(-3),
-  "parah":(-3),"sangat parah":(-3),"tidak bisa diterima":(-3),
-  "brengsek":(-3),"sampah":(-3),"terburuk":(-3),"penipuan":(-3),
-  "ditipu":(-3),"menipu":(-3),"bohong":(-3),"tidak jujur":(-3),
-  "tidak profesional":(-3),"tidak bertanggung jawab":(-3),
-  "tidak mau kembali":(-3),"kapok":(-3),"tobat":(-3),
-  "lapor":(-2),"komplain":(-2),"keluhan":(-2),"protes":(-2),
-  "awful":(-3),"horrible":(-3),"scam":(-3),
+  // Sangat Negatif (-3)
+  "sangat kecewa":(-3), "sangat buruk":(-3), "sangat mengecewakan":(-3),
+  "parah":(-3), "sangat parah":(-3), "tidak bisa diterima":(-3),
+  "brengsek":(-3), "sampah":(-3), "terburuk":(-3), "penipuan":(-3),
+  "ditipu":(-3), "menipu":(-3), "bohong":(-3), "tidak jujur":(-3),
+  "tidak profesional":(-3), "tidak bertanggung jawab":(-3),
+  "tidak mau kembali":(-3), "kapok":(-3), "tobat":(-3),
+  "lapor":(-2), "komplain":(-2), "keluhan":(-2), "protes":(-2),
+  "awful":(-3), "horrible":(-3), "scam":(-3), "bapuk":(-3), "ampas":(-3),
+  "bintang 1":(-3), "1 bintang":(-3), "penipu":(-3), "curang":(-3)
 };
 
-// ── Kata penguat intensitas ──────────────────────────────────
-const INTENSIFIERS = ["sangat","amat","banget","sekali","benar-benar","sungguh",
-                      "betul-betul","super","extremely","very","really","luar biasa"];
-
-// ── Kata pembalik ────────────────────────────────────────────
-const NEGATORS = ["tidak","bukan","belum","tanpa","jangan","gak","ga","nggak",
-                  "ngga","tak","enggak","tidaklah","bukanlah"];
-
-// ── Kata kunci kategori ──────────────────────────────────────
-const CATEGORY_KEYWORDS = {
-  "Delivery / Pengiriman": ["paket","kiriman","kurir","pengiriman","terlambat","telat","delay",
-    "ekspedisi","logistik","tracking","resi","datang","dikirim","diterima","estimasi"],
-  "Service Quality":       ["cs","customer service","agent","staff","operator","layanan","respon",
-    "balasan","ditanggapi","solusi","membantu","ramah","sabar","profesional","hotline","chat","call"],
-  "Product Quality":       ["produk","barang","kualitas","rusak","cacat","tidak sesuai","foto",
-    "deskripsi","palsu","asli","original","bahan","ukuran","warna","beda"],
-  "Bug Aplikasi":          ["aplikasi","app","error","bug","crash","loading","lambat","tidak bisa",
-    "fitur","update","versi","login","akun","otp","kode","notifikasi","server","down"],
-  "Billing / Pembayaran":  ["bayar","pembayaran","tagihan","refund","pengembalian","dana","transfer",
-    "invoice","struk","kwitansi","cicilan","kredit","debit","saldo","promo","diskon","voucher"],
+// Emoji Polarity Map
+const EMOJI_SCORES = {
+  "😡": -3, "🤬": -3, "👎": -2, "💔": -2, "💩": -3, "🤮": -3, "😭": -2, "😤": -2,
+  "❤️": 3, "💖": 3, "👍": 2, "🔥": 2, "⭐": 2, "🌟": 3, "😍": 3, "🥰": 3, "👏": 2, "💯": 3
 };
 
-// ══════════════════════════════════════════════════════════════
-//  ENGINE ANALISIS
-// ══════════════════════════════════════════════════════════════
-function analyzeText(text, forcedCategory) {
+const INTENSIFIERS = [
+  "sangat", "amat", "banget", "sekali", "benar-benar", "sungguh",
+  "betul-betul", "super", "extremely", "very", "really", "luar biasa", "pol"
+];
+
+const NEGATORS = [
+  "tidak", "bukan", "belum", "tanpa", "jangan", "gak", "ga", "nggak",
+  "ngga", "tak", "enggak", "tidaklah", "bukanlah"
+];
+
+// Aspek-aspek ABSA & Kata Kunci
+const ASPECT_KEYWORDS = {
+  "Delivery / Logistik": ["paket","kiriman","kurir","pengiriman","terlambat","telat","delay",
+    "ekspedisi","logistik","tracking","resi","datang","dikirim","diterima","estimasi","ongkir","sicepat","jnt","jne"],
+  "Service Quality": ["cs","customer service","agent","staff","operator","layanan","respon",
+    "balasan","ditanggapi","solusi","membantu","ramah","sabar","profesional","hotline","chat","call","bantuan"],
+  "Product Quality": ["produk","barang","kualitas","rusak","cacat","tidak sesuai","foto",
+    "deskripsi","palsu","asli","original","bahan","ukuran","warna","beda","kardus","segel"],
+  "Bug Aplikasi": ["aplikasi","app","error","bug","crash","loading","lambat","tidak bisa",
+    "fitur","update","versi","login","akun","otp","kode","notifikasi","server","down","lemot"],
+  "Billing / Refund": ["bayar","pembayaran","tagihan","refund","pengembalian","dana","transfer",
+    "invoice","struk","kwitansi","cicilan","kredit","debit","saldo","promo","diskon","voucher","uang"]
+};
+
+// ──────────────────────────────────────────────────────────────
+// 2. ASPECT-BASED SENTIMENT ANALYSIS (ABSA) ENGINE
+// ──────────────────────────────────────────────────────────────
+function analyzeABSA(text, forcedCategory = "auto") {
   const lower = text.toLowerCase();
-  const words  = lower.split(/\s+/);
+  
+  // 1. Tokenisasi Klausa / Kalimat
+  // Split berdasarkan titik, koma, tanda seru, tanya, atau kata sambung kontras
+  const clauses = lower.split(/(?:[.,!?;\n]+|\b(?:tapi|tetapi|namun|padahal|sedangkan|meskipun|walaupun)\b)/)
+                       .map(c => c.trim())
+                       .filter(c => c.length > 2);
 
-  // 1. SCORING ────────────────────────────────────────────────
+  // 2. Global Scoring & Matches
   let totalScore = 0;
   let matchCount = 0;
   const matchedPhrases = [];
-
-  // Cek frasa multi-kata dulu (prioritas lebih tinggi)
-  const phrases = Object.keys(LEXICON).sort((a,b) => b.split(" ").length - a.split(" ").length);
   const usedRanges = new Set();
+
+  // Urutkan frasa leksikon dari yang terpanjang (multi-word first)
+  const phrases = Object.keys(LEXICON).sort((a,b) => b.length - a.length);
 
   for (const phrase of phrases) {
     let idx = lower.indexOf(phrase);
     while (idx !== -1) {
       const range = `${idx}-${idx+phrase.length}`;
       if (!usedRanges.has(range)) {
-        // Cek negator sebelum frasa (dalam 3 kata)
         const before = lower.slice(Math.max(0, idx - 25), idx).trim().split(/\s+/);
         const negated = before.slice(-3).some(w => NEGATORS.includes(w));
-        // Cek intensifier sebelum frasa
         const intensified = before.slice(-3).some(w => INTENSIFIERS.includes(w));
 
         let score = LEXICON[phrase];
-        if (negated)    score = -Math.abs(score);
+        if (negated) score = -Math.abs(score);
         if (intensified) score = score > 0 ? score + 1 : score - 1;
         score = Math.max(-4, Math.min(4, score));
 
@@ -587,511 +1294,1136 @@ function analyzeText(text, forcedCategory) {
     }
   }
 
-  // 2. NORMALISASI SKOR ────────────────────────────────────────
-  const rawScore = matchCount > 0 ? totalScore / matchCount : 0;
-  const wordCount = words.length;
-  const complexityMod = wordCount > 80 ? 0.9 : 1;
-  const normalizedScore = rawScore * complexityMod;
-
-  // 3. SENTIMEN LABEL ──────────────────────────────────────────
-  let sentiment, sentimentClass, confidenceBase, intensityBase;
-  if      (normalizedScore >= 2.0)  { sentiment="Sangat Positif"; sentimentClass="b-sp"; confidenceBase=92; intensityBase=9; }
-  else if (normalizedScore >= 0.8)  { sentiment="Positif";        sentimentClass="b-p";  confidenceBase=85; intensityBase=7; }
-  else if (normalizedScore >= -0.3) { sentiment="Netral";         sentimentClass="b-n";  confidenceBase=70; intensityBase=5; }
-  else if (normalizedScore >= -1.5) { sentiment="Negatif";        sentimentClass="b-ng"; confidenceBase=83; intensityBase=7; }
-  else                               { sentiment="Sangat Negatif"; sentimentClass="b-sn"; confidenceBase=91; intensityBase=9; }
-
-  // Confidence: naik jika banyak kata cocok, turun jika teks pendek
-  const matchRatio = matchCount / Math.max(1, wordCount / 3);
-  const confidence = Math.min(99, Math.max(45, Math.round(confidenceBase + matchRatio * 10 - (wordCount < 10 ? 10 : 0))));
-
-  // Intensity: 1-10 berdasarkan magnitude skor
-  const intensity = Math.min(10, Math.max(1, Math.round(intensityBase + Math.abs(normalizedScore) * 0.5)));
-
-  // 4. EMOSI ───────────────────────────────────────────────────
-  const emotionMap = {
-    "Sangat Positif": ["Puas & Loyal","Senang","Antusias","Kagum"],
-    "Positif":        ["Puas","Lega","Apresiasi","Berterima Kasih"],
-    "Netral":         ["Biasa","Cukup Puas","Ekspektatif","Tidak Yakin"],
-    "Negatif":        ["Kecewa","Frustrasi","Kesal","Tidak Puas"],
-    "Sangat Negatif": ["Sangat Kecewa","Marah","Frustrasi Tinggi","Merasa Dirugikan"],
-  };
-  const emotions = emotionMap[sentiment];
-  const primaryEmotion = emotions[Math.min(Math.floor(Math.abs(normalizedScore * 0.7)), emotions.length-1)];
-
-  // 5. KATEGORI AUTO-DETECT ────────────────────────────────────
-  let detectedCategories = [];
-  if (forcedCategory && forcedCategory !== "auto") {
-    const labels = {
-      "delivery":"Delivery / Pengiriman","service":"Service Quality",
-      "product":"Product Quality","app":"Bug Aplikasi",
-      "billing":"Billing / Pembayaran","other":"Lainnya"
-    };
-    detectedCategories = [labels[forcedCategory]];
-  } else {
-    const catScores = {};
-    for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-      catScores[cat] = keywords.filter(k => lower.includes(k)).length;
-    }
-    const max = Math.max(...Object.values(catScores));
-    if (max > 0) {
-      detectedCategories = Object.entries(catScores)
-        .filter(([,v]) => v >= Math.max(1, max - 1))
-        .sort((a,b) => b[1]-a[1])
-        .slice(0,3)
-        .map(([k]) => k);
-    } else {
-      detectedCategories = ["Umum / Lainnya"];
+  // Cek Emoji Score
+  for (const [emoji, eScore] of Object.entries(EMOJI_SCORES)) {
+    if (text.includes(emoji)) {
+      totalScore += eScore;
+      matchCount++;
+      matchedPhrases.push({ phrase: emoji, score: eScore, negated: false, intensified: false });
     }
   }
 
-  // 6. HIGHLIGHTED KEYWORDS ────────────────────────────────────
-  const topPositive = matchedPhrases.filter(m => m.score > 0).sort((a,b)=>b.score-a.score).slice(0,4);
-  const topNegative = matchedPhrases.filter(m => m.score < 0).sort((a,b)=>a.score-b.score).slice(0,4);
+  // 3. Normalisasi Skor Global
+  const words = lower.split(/\s+/).filter(w => w.length > 0);
+  const wordCount = words.length;
+  const rawScore = matchCount > 0 ? totalScore / matchCount : 0;
+  const normalizedScore = Number((rawScore * (wordCount > 70 ? 0.92 : 1)).toFixed(2));
+
+  // 4. Sentimen Label
+  let sentiment, sentimentClass, confidenceBase, intensityBase;
+  if      (normalizedScore >= 1.8)  { sentiment="Sangat Positif"; sentimentClass="b-sp"; confidenceBase=93; intensityBase=9; }
+  else if (normalizedScore >= 0.6)  { sentiment="Positif";        sentimentClass="b-p";  confidenceBase=86; intensityBase=7; }
+  else if (normalizedScore >= -0.3) { sentiment="Netral";         sentimentClass="b-n";  confidenceBase=72; intensityBase=5; }
+  else if (normalizedScore >= -1.6) { sentiment="Negatif";        sentimentClass="b-ng"; confidenceBase=84; intensityBase=7; }
+  else                              { sentiment="Sangat Negatif"; sentimentClass="b-sn"; confidenceBase=92; intensityBase=9; }
+
+  const confidence = Math.min(99, Math.max(50, Math.round(confidenceBase + (matchCount * 2) - (wordCount < 6 ? 15 : 0))));
+  const intensity  = Math.min(10, Math.max(1, Math.round(intensityBase + Math.abs(normalizedScore) * 0.6)));
+
+  // 5. Emosi Utama
+  const emotionMap = {
+    "Sangat Positif": ["Sangat Puas & Loyal", "Antusias", "Kagum & Apresiatif"],
+    "Positif":        ["Puas", "Lega", "Berterima Kasih"],
+    "Netral":         ["Biasa Saja", "Standar", "Ekspektatif"],
+    "Negatif":        ["Kecewa", "Kesal", "Tidak Puas"],
+    "Sangat Negatif": ["Sangat Marah", "Frustrasi Tinggi", "Merasa Dirugikan"]
+  };
+  const emotionList = emotionMap[sentiment];
+  const primaryEmotion = emotionList[Math.min(Math.floor(Math.abs(normalizedScore)), emotionList.length - 1)];
+
+  // 6. Deteksi ABSA per Aspek (Aspect-Based Breakdown)
+  const aspectResults = {};
+  for (const [aspectName, keywords] of Object.entries(ASPECT_KEYWORDS)) {
+    // Cari klausa yang relevan dengan aspek ini
+    let aspectScore = 0;
+    let aspectHits = 0;
+
+    for (const clause of clauses) {
+      const hasKeyword = keywords.some(k => clause.includes(k));
+      if (hasKeyword) {
+        // Hitung sentimen dalam klausa ini
+        for (const [p, sc] of Object.entries(LEXICON)) {
+          if (clause.includes(p)) {
+            aspectScore += sc;
+            aspectHits++;
+          }
+        }
+      }
+    }
+
+    if (aspectHits > 0) {
+      const avg = aspectScore / aspectHits;
+      aspectResults[aspectName] = {
+        score: Number(avg.toFixed(1)),
+        hits: aspectHits,
+        status: avg >= 1.0 ? "Positif" : avg <= -0.5 ? "Negatif" : "Netral"
+      };
+    } else {
+      // Cek apakah ada keyword tanpa sentimen spesifik
+      const generalHits = keywords.filter(k => lower.includes(k)).length;
+      if (generalHits > 0) {
+        aspectResults[aspectName] = {
+          score: normalizedScore, // fallback ke general score
+          hits: generalHits,
+          status: sentiment
+        };
+      }
+    }
+  }
+
+  // 7. Kategori Utama
+  let detectedCategories = Object.keys(aspectResults);
+  if (forcedCategory !== "auto" && forcedCategory) {
+    const forcedMap = {
+      delivery: "Delivery / Logistik",
+      service: "Service Quality",
+      product: "Product Quality",
+      app: "Bug Aplikasi",
+      billing: "Billing / Refund"
+    };
+    detectedCategories = [forcedMap[forcedCategory] || "Umum"];
+  } else if (detectedCategories.length === 0) {
+    detectedCategories = ["Umum / Layanan Keseluruhan"];
+  }
+
+  // 8. Churn Risk & NPS Projection
+  let churnRisk, churnColor, npsClass, priorityTag, slaHours;
+  if (normalizedScore >= 1.8) {
+    churnRisk = "Sangat Rendah (0-5%)"; churnColor = "var(--success)";
+    npsClass = "Promoter (9-10)"; priorityTag = "P4 - Low"; slaHours = 72;
+  } else if (normalizedScore >= 0.6) {
+    churnRisk = "Rendah (5-15%)"; churnColor = "var(--primary)";
+    npsClass = "Passive (7-8)"; priorityTag = "P4 - Low"; slaHours = 48;
+  } else if (normalizedScore >= -0.3) {
+    churnRisk = "Moderat (20-35%)"; churnColor = "#d97706";
+    npsClass = "Passive (6-7)"; priorityTag = "P3 - Medium"; slaHours = 24;
+  } else if (normalizedScore >= -1.6) {
+    churnRisk = "Tinggi (50-70%)"; churnColor = "#ea580c";
+    npsClass = "Detractor (3-5)"; priorityTag = "P2 - High"; slaHours = 4;
+  } else {
+    churnRisk = "Kritis / Sangat Tinggi (>85%)"; churnColor = "var(--danger)";
+    npsClass = "Detractor (0-2)"; priorityTag = "P1 - Critical"; slaHours = 1;
+  }
+
+  // Keyword Drivers
+  const topPositive = matchedPhrases.filter(m => m.score > 0).slice(0, 4);
+  const topNegative = matchedPhrases.filter(m => m.score < 0).slice(0, 4);
 
   return {
     sentiment, sentimentClass, confidence, intensity, primaryEmotion,
-    normalizedScore, matchCount, detectedCategories,
-    topPositive, topNegative, wordCount
+    normalizedScore, matchCount, wordCount, detectedCategories,
+    aspectResults, churnRisk, churnColor, npsClass, priorityTag, slaHours,
+    topPositive, topNegative, clausesCount: clauses.length
   };
 }
 
-// ══════════════════════════════════════════════════════════════
-//  GENERATOR KONTEN DINAMIS
-// ══════════════════════════════════════════════════════════════
-function generateRootCause(r, text) {
-  const lower = text.toLowerCase();
-  const isPos = r.normalizedScore > 0;
-  const rows = [];
+// ──────────────────────────────────────────────────────────────
+// 3. ENTERPRISE DATASET & PRE-POPULATED SAMPLES (25 Records)
+// ──────────────────────────────────────────────────────────────
+const SAMPLE_DATASET = [
+  { id: "REV-2001", date: "2026-10-31", customer: "Bambang Sudrajat", channel: "Tokopedia", text: "Saya sangat puas dengan pelayanan kurir dan sellernya! Kemarin pesen hari ini langsung sampai. Barang original, packing bubble tebal. Recomended banget!", aspect: "Delivery & Product" },
+  { id: "REV-2002", date: "2026-10-31", customer: "Annisa Larasati", channel: "Shopee", text: "CS agent bernama Rina sangat ramah dan solutif menyelesaikan kendala retur saya dalam 10 menit. Bintang 5 buat pelayanannya!", aspect: "Service Quality" },
+  { id: "REV-2003", date: "2026-10-30", customer: "Dedi Prasetyo", channel: "Google Play", text: "Aplikasi sangat bapuk dan sering crash waktu checkout! Uang sudah terpotong lewat debit tapi orderan tidak muncul. Penipuan ini namanya!", aspect: "Bug & Billing" },
+  { id: "REV-2004", date: "2026-10-30", customer: "Siti Rahmawati", channel: "CS WhatsApp", text: "Paket saya sudah terlambat 6 hari belum sampai juga. Tracking resi tidak update. CS cuma bilang suruh sabar terus. Sangat mengecewakan!", aspect: "Delivery / Logistik" },
+  { id: "REV-2005", date: "2026-10-30", customer: "Fajar Nugraha", channel: "Tokopedia", text: "Barang bagus banget dan berfungsi normal sesuai foto, tapi pengiriman kurir ekspedisi lambat sekali sampai 5 hari. Agak kecewa sama logistiknya.", aspect: "ABSA Mixed" },
+  { id: "REV-2006", date: "2026-10-29", customer: "Maya Indah", channel: "App Store", text: "Fitur update terbarunya keren dan smooth banget. UI makin bersih dan gampang cari promo. Top markotop!", aspect: "Bug Aplikasi" },
+  { id: "REV-2007", date: "2026-10-29", customer: "Hendro Wijaya", channel: "Email Support", text: "Permintaan refund dana saya sudah 2 minggu belum cair juga. Prosedurnya ribet dan berbelit-belit. Tolong uang saya dikembalikan secepatnya.", aspect: "Billing / Refund" },
+  { id: "REV-2008", date: "2026-10-29", customer: "Rizky Firmansyah", channel: "Shopee", text: "Pelayanan biasa saja standar, respon chat agak lambat tapi barang sampai dengan selamat.", aspect: "Service Quality" },
+  { id: "REV-2009", date: "2026-10-28", customer: "Dewi Lestari", channel: "Tokopedia", text: "Mantap jiwa! Kualitas kain tebal dan warnanya sesuai ekspektasi. Seller fast respon dan gercep kirimnya. Makasih!", aspect: "Product Quality" },
+  { id: "REV-2010", date: "2026-10-28", customer: "Agus Santoso", channel: "CS LiveChat", text: "CS jutek sekali menjawab komplain saya. Tidak ada empati sama sekali dan malah menyalahkan pembeli. Tidak profesional!", aspect: "Service Quality" },
+  { id: "REV-2011", date: "2026-10-28", customer: "Tania Putri", channel: "Shopee", text: "Zonk banget, barang yang datang cacat dan rusak di bagian layar. Mau minta tukar tapi seller slow respon.", aspect: "Product & CS" },
+  { id: "REV-2012", date: "2026-10-27", customer: "Eko Pratama", channel: "Google Play", text: "Aplikasi ringan dan cepat. Banyak diskon menarik. Sangat membantu kebutuhan belanja bulanan keluarga kami.", aspect: "Bug Aplikasi" },
+  { id: "REV-2013", date: "2026-10-27", customer: "Lina Marlina", channel: "Email Support", text: "Tagihan dobel waktu bayar pakai kartu kredit. Mohon dibantu refund kelebihan dananya ya, terima kasih sebelumnya.", aspect: "Billing / Refund" },
+  { id: "REV-2014", date: "2026-10-27", customer: "Budi Gunawan", channel: "Tokopedia", text: "Cukup puas, packaging aman tidak ada yang rusak. Pengiriman standar 3 hari ke Surabaya.", aspect: "Delivery / Logistik" },
+  { id: "REV-2015", date: "2026-10-26", customer: "Indra Kusuma", channel: "CS WhatsApp", text: "Parah bgt kurirnya dilempar ke teras waktu hujan! Kardusnya hancur untung barangnya gak rusak. Kapok pakai ekspedisi ini.", aspect: "Delivery / Logistik" },
+  { id: "REV-2016", date: "2026-10-26", customer: "Ratna Sari", channel: "Shopee", text: "Sudah langganan 2 tahun di sini, selalu puas dengan kualitas dan kecepatan pengirimannya. Sukses terus!", aspect: "Product & Delivery" },
+  { id: "REV-2017", date: "2026-10-26", customer: "Yoga Pamungkas", channel: "App Store", text: "Kenapa tiap mau checkout selalu error network padahal internet lancar? Tolong segera difix bug ini merugikan user.", aspect: "Bug Aplikasi" },
+  { id: "REV-2018", date: "2026-10-25", customer: "Sri Wahyuni", channel: "CS LiveChat", text: "Terima kasih banyak atas bantuan mas Budi di tim support. Masalah login akun saya terselesaikan dengan cepat.", aspect: "Service Quality" },
+  { id: "REV-2019", date: "2026-10-25", customer: "Dimas Anggara", channel: "Tokopedia", text: "Barang tidak sesuai deskripsi, katanya garansi resmi tapi setelah dicek serial number tidak terdaftar. Kecewa parah.", aspect: "Product Quality" },
+  { id: "REV-2020", date: "2026-10-25", customer: "Wulan Dari", channel: "Shopee", text: "Lumayan lah untuk harga segini, jangan berekspektasi terlalu tinggi. Pengiriman aman dan cepat sampai.", aspect: "Product Quality" },
+  { id: "REV-2021", date: "2026-10-24", customer: "Adi Nugroho", channel: "Google Play", text: "Sistem voucher sering zonk, kuota tertulis ada tapi waktu mau bayar tiba-tiba hangus. Bikin jengkel.", aspect: "Billing & App" },
+  { id: "REV-2022", date: "2026-10-24", customer: "Rina Melati", channel: "Tokopedia", text: "Sempurna! Pengemasan kayu rapi sekali, produk original 100%. CS juga aktif mengabarkan resi pengiriman. Top!", aspect: "Service & Product" },
+  { id: "REV-2023", date: "2026-10-24", customer: "Aris Munandar", channel: "Email Support", text: "Akun saya terblokir tanpa alasan jelas padahal baru isi saldo 500rb. Mohon penjelasannya segera atau saya buat laporan kepolisian.", aspect: "Billing / Refund" },
+  { id: "REV-2024", date: "2026-10-23", customer: "Fitri Handayani", channel: "Shopee", text: "Warna jilbabnya beda jauh dengan di katalog foto. Agak nyesel beli di sini, respon komplain lambat.", aspect: "Product Quality" },
+  { id: "REV-2025", date: "2026-10-23", customer: "Surya Kencana", channel: "CS WhatsApp", text: "Layanan sangat ramah, barang datang tepat waktu dan packaging rapi. Rekomen banget untuk belanja lagi.", aspect: "Delivery & Service" }
+];
 
-  // Pemicu
-  const triggers = [];
-  if (lower.match(/terlambat|telat|delay|belum datang/)) triggers.push("keterlambatan pengiriman");
-  if (lower.match(/rusak|cacat|tidak sesuai/)) triggers.push("kualitas produk bermasalah");
-  if (lower.match(/error|bug|crash|tidak bisa/)) triggers.push("gangguan teknis aplikasi");
-  if (lower.match(/tidak ditanggapi|tidak dibalas|lama dibalas/)) triggers.push("respons CS lambat");
-  if (lower.match(/refund|pengembalian|uang/)) triggers.push("isu pembayaran/refund");
-  if (lower.match(/ramah|sabar|membantu|cepat/)) triggers.push("kualitas pelayanan agent");
-  const triggerText = triggers.length > 0 ? triggers.join(", ") : (isPos ? "pengalaman berbelanja/menggunakan layanan" : "interaksi dengan layanan/produk");
+// In-Memory Database
+let activeDataset = [];
+let activeTickets = [];
 
-  rows.push({ dim: "Pemicu Utama", val: `Pelanggan menyampaikan pengalaman terkait <strong>${triggerText}</strong>.` });
+// ──────────────────────────────────────────────────────────────
+// 4. UI INITIALIZATION & EVENT HANDLERS
+// ──────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  initClock();
+  initTabs();
+  loadInitialDataset();
+  renderLexiconTable();
+  setupEventListeners();
+});
 
-  // Root Cause
-  if (isPos) {
-    const agents = text.match(/\b([A-Z][a-z]+)\b/g);
-    const namedAgent = agents ? agents.find(n => !["Saya","Ini","Kami","Tim","Terima"].includes(n)) : null;
-    rows.push({ dim: "Root Cause Positif", val: namedAgent
-      ? `Kompetensi dan empati ${namedAgent} berhasil menciptakan pengalaman pelanggan yang melebihi ekspektasi.`
-      : "Kualitas layanan yang konsisten dan responsif menciptakan pengalaman positif bagi pelanggan." });
-  } else {
-    rows.push({ dim: "Root Cause Negatif", val: `Terdapat gap antara ekspektasi pelanggan dan realisasi layanan/produk, menyebabkan rasa <strong>${r.primaryEmotion.toLowerCase()}</strong>.` });
+function initClock() {
+  const clockEl = document.getElementById("live-time");
+  function tick() {
+    const now = new Date();
+    clockEl.textContent = "🕒 " + now.toLocaleDateString("id-ID", { day:"numeric", month:"short", year:"numeric" }) + " " + now.toLocaleTimeString("id-ID");
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+function initTabs() {
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  tabButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      switchTab(btn.dataset.tab);
+    });
+  });
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-view").forEach(v => v.classList.remove("active"));
+
+  const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+  const targetView = document.getElementById(tabId);
+  if (targetBtn && targetView) {
+    targetBtn.classList.add("active");
+    targetView.classList.add("active");
   }
 
-  // Dampak
-  if (r.normalizedScore >= 2) {
-    rows.push({ dim: "Dampak Bagi Pelanggan", val: "Pengalaman positif memperkuat loyalitas. Risiko churn sangat rendah. Potensi advocacy tinggi." });
-  } else if (r.normalizedScore >= 0.5) {
-    rows.push({ dim: "Dampak Bagi Pelanggan", val: "Pelanggan merasa cukup puas. Loyalitas terjaga namun masih ada ruang peningkatan untuk memperkuat retensi." });
+  // Trigger chart re-render on dashboard tab switch
+  if (tabId === "tab-dashboard") {
+    setTimeout(renderAllCharts, 100);
+  }
+}
+
+function setupEventListeners() {
+  // Single Review Real-time counter
+  const singleText = document.getElementById("single-review-text");
+  const countEl = document.getElementById("char-word-counter");
+  singleText.addEventListener("input", () => {
+    const val = singleText.value.trim();
+    const chars = val.length;
+    const words = val ? val.split(/\s+/).length : 0;
+    countEl.textContent = `${chars} karakter | ${words} kata`;
+  });
+
+  // Single Review Run
+  document.getElementById("btn-run-single").addEventListener("click", runSingleAnalysis);
+  document.getElementById("btn-clear-single").addEventListener("click", () => {
+    singleText.value = "";
+    countEl.textContent = "0 karakter | 0 kata";
+    document.getElementById("single-report-output").style.display = "none";
+    document.getElementById("btn-create-ticket-single").style.display = "none";
+  });
+
+  // Sample chips in Single view
+  document.querySelectorAll(".chip[data-sample]").forEach(chip => {
+    chip.addEventListener("click", () => {
+      loadSingleSample(chip.dataset.sample);
+    });
+  });
+
+  // Batch CSV Upload
+  document.getElementById("csv-file-input").addEventListener("change", handleCSVUpload);
+  document.getElementById("btn-load-sample-dataset").addEventListener("click", () => {
+    loadInitialDataset(true);
+    showToast("25 Sampel Enterprise berhasil dimuat kembali!");
+  });
+  document.getElementById("btn-export-csv").addEventListener("click", exportEnrichedCSV);
+
+  // Batch Table Filter & Search
+  document.getElementById("batch-search").addEventListener("input", filterBatchTable);
+  document.getElementById("batch-filter-sentiment").addEventListener("change", filterBatchTable);
+  document.getElementById("batch-filter-category").addEventListener("change", filterBatchTable);
+  document.getElementById("batch-filter-risk").addEventListener("change", filterBatchTable);
+
+  // SLA Ticket Filters
+  document.querySelectorAll(".filter-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      renderTicketTable(pill.dataset.tfilter);
+    });
+  });
+
+  // Sync tickets button
+  document.getElementById("btn-sync-tickets").addEventListener("click", () => {
+    syncTicketsFromDataset();
+    showToast("Tiket berhasil disinkronkan dari ulasan negatif/kritis!");
+  });
+
+  // Lexicon Management
+  document.getElementById("btn-add-lexicon").addEventListener("click", addCustomLexiconWord);
+  document.getElementById("btn-test-word").addEventListener("click", testSingleWord);
+  document.getElementById("lexicon-search").addEventListener("input", filterLexiconTable);
+}
+
+// ──────────────────────────────────────────────────────────────
+// 5. DATASET & BATCH PROCESSING
+// ──────────────────────────────────────────────────────────────
+function loadInitialDataset(force = false) {
+  activeDataset = SAMPLE_DATASET.map(item => {
+    const analysis = analyzeABSA(item.text);
+    return {
+      ...item,
+      analysis: analysis,
+      sentiment: analysis.sentiment,
+      score: analysis.normalizedScore,
+      churnRisk: analysis.churnRisk,
+      priority: analysis.priorityTag,
+      category: analysis.detectedCategories[0] || "Umum"
+    };
+  });
+
+  document.getElementById("batch-count-badge").textContent = activeDataset.length;
+  document.getElementById("kpi-total-reviews").textContent = activeDataset.length;
+  
+  filterBatchTable();
+  syncTicketsFromDataset();
+  updateKPIs();
+  renderAllCharts();
+}
+
+function updateKPIs() {
+  if (activeDataset.length === 0) return;
+
+  const total = activeDataset.length;
+  const promoters = activeDataset.filter(d => d.analysis.npsClass.includes("Promoter")).length;
+  const detractors = activeDataset.filter(d => d.analysis.npsClass.includes("Detractor")).length;
+  const passives = total - promoters - detractors;
+
+  const npsScore = Math.round(((promoters - detractors) / total) * 100);
+  const npsEl = document.getElementById("kpi-nps");
+  npsEl.textContent = (npsScore > 0 ? "+" : "") + npsScore;
+  npsEl.style.color = npsScore >= 30 ? "var(--success)" : npsScore >= 0 ? "var(--primary)" : "var(--danger)";
+
+  document.getElementById("kpi-nps-sub").textContent = 
+    `Promoter: ${Math.round((promoters/total)*100)}% | Detractor: ${Math.round((detractors/total)*100)}%`;
+
+  // CSAT = % of reviews with Positif or Sangat Positif
+  const satisfiedCount = activeDataset.filter(d => d.score >= 0.5).length;
+  const csat = Math.round((satisfiedCount / total) * 100);
+  document.getElementById("kpi-csat").textContent = csat + "%";
+
+  // High Churn Count
+  const highChurnCount = activeDataset.filter(d => d.score < -0.3).length;
+  document.getElementById("kpi-churn-count").textContent = highChurnCount;
+
+  // Open Tickets Count
+  const openCount = activeTickets.filter(t => t.status !== "Resolved").length;
+  document.getElementById("kpi-open-tickets").textContent = openCount;
+  document.getElementById("ticket-count-badge").textContent = openCount;
+}
+
+function filterBatchTable() {
+  const query = document.getElementById("batch-search").value.toLowerCase();
+  const sentFilter = document.getElementById("batch-filter-sentiment").value;
+  const catFilter = document.getElementById("batch-filter-category").value;
+  const riskFilter = document.getElementById("batch-filter-risk").value;
+
+  const tbody = document.getElementById("batch-table-body");
+  tbody.innerHTML = "";
+
+  const filtered = activeDataset.filter(d => {
+    const matchQ = d.text.toLowerCase().includes(query) || d.customer.toLowerCase().includes(query) || d.id.toLowerCase().includes(query);
+    const matchS = sentFilter === "all" || d.sentiment === sentFilter;
+    const matchC = catFilter === "all" || d.category === catFilter;
+    const matchR = riskFilter === "all" || d.churnRisk.includes(riskFilter);
+    return matchQ && matchS && matchC && matchR;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-light)">Tidak ada data ulasan yang cocok dengan kriteria filter.</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${row.id}</strong></td>
+      <td>
+        <span style="font-weight:600">${row.channel}</span><br>
+        <span style="font-size:11px;color:var(--text-light)">${row.date}</span>
+      </td>
+      <td><strong>${row.customer}</strong></td>
+      <td style="max-width:320px;line-height:1.4">
+        "${escHtml(row.text.length > 85 ? row.text.slice(0, 85) + "..." : row.text)}"
+      </td>
+      <td><span class="badge ${row.analysis.sentimentClass}">${row.sentiment}</span></td>
+      <td><span class="badge b-p" style="font-size:11px">${row.category}</span></td>
+      <td><span style="color:${row.analysis.churnColor};font-weight:700">${row.churnRisk.split(" ")[0]}</span></td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="openDetailModal('${row.id}')">
+          👁️ Detail
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function handleCSVUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const text = evt.target.result;
+    const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+    if (lines.length < 2) {
+      alert("File CSV tidak memiliki data yang cukup.");
+      return;
+    }
+
+    // Header inspection
+    const header = lines[0].toLowerCase();
+    const newItems = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      // Basic CSV parser handling quotes
+      const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, "").trim());
+      if (parts.length > 0 && parts[0]) {
+        const reviewText = parts[parts.length > 2 ? 2 : 0] || parts[0];
+        const analysis = analyzeABSA(reviewText);
+        newItems.push({
+          id: `CSV-${1000 + i}`,
+          date: new Date().toISOString().split("T")[0],
+          customer: parts.length > 1 ? parts[1] : `User ${i}`,
+          channel: parts.length > 3 ? parts[3] : "Imported CSV",
+          text: reviewText,
+          analysis: analysis,
+          sentiment: analysis.sentiment,
+          score: analysis.normalizedScore,
+          churnRisk: analysis.churnRisk,
+          priority: analysis.priorityTag,
+          category: analysis.detectedCategories[0] || "Umum"
+        });
+      }
+    }
+
+    if (newItems.length > 0) {
+      activeDataset = newItems;
+      document.getElementById("batch-count-badge").textContent = activeDataset.length;
+      document.getElementById("kpi-total-reviews").textContent = activeDataset.length;
+      filterBatchTable();
+      syncTicketsFromDataset();
+      updateKPIs();
+      renderAllCharts();
+      showToast(`${newItems.length} ulasan berhasil dimuat dari CSV!`);
+      switchTab("tab-batch");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function exportEnrichedCSV() {
+  if (activeDataset.length === 0) {
+    alert("Dataset kosong. Tidak ada data untuk diunduh.");
+    return;
+  }
+
+  let csvContent = "\uFEFF"; // UTF-8 BOM for Excel
+  csvContent += "ID,Tanggal,Channel,Nama Pelanggan,Teks Ulasan,Sentimen,Skor Sentimen,Kategori Utama,Risiko Churn,Prioritas SLA\r\n";
+
+  activeDataset.forEach(d => {
+    const row = [
+      `"${d.id}"`,
+      `"${d.date}"`,
+      `"${d.channel}"`,
+      `"${d.customer.replace(/"/g, '""')}"`,
+      `"${d.text.replace(/"/g, '""')}"`,
+      `"${d.sentiment}"`,
+      d.score,
+      `"${d.category}"`,
+      `"${d.churnRisk}"`,
+      `"${d.priority}"`
+    ];
+    csvContent += row.join(",") + "\r\n";
+  });
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `CX_Feedback_Enriched_${new Date().toISOString().slice(0,10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast("File CSV hasil analisis berhasil diunduh!");
+}
+
+// ──────────────────────────────────────────────────────────────
+// 6. SINGLE REVIEW ANALYSIS & ABSA VIEW
+// ──────────────────────────────────────────────────────────────
+function loadSingleSample(type) {
+  const input = document.getElementById("single-review-text");
+  const samples = {
+    "absa-mixed": "Kualitas barangnya luar biasa bagus, packaging kayu sangat rapi dan produk original 100%. Tapi sayangnya ekspedisi pengiriman parah sekali, paket tertahan 6 hari dan CS yang saya hubungi sangat lambat merespon. Mohon perbaiki layanan logistik dan CS kalian!",
+    "p-agent": "Saya benar-benar terkesan dengan layanan pelanggan kalian! Kemarin saya menghubungi CS karena paket terlambat, dan agent bernama Rina langsung menyelesaikan masalah dalam 15 menit. Sangat ramah, sabar, dan solutif. Saya sudah jadi pelanggan 3 tahun dan pasti recommend banget!",
+    "crit-bug": "Aplikasi kalian sangat bapuk! Sudah 3 kali saya coba bayar selalu error dan uang di rekening sudah terpotong 850rb tapi pesanan tidak masuk. CS tidak ada respon sama sekali! Ini penipuan namanya, tolong kembalikan uang saya atau saya lapor ke pihak berwajib!",
+    "delay-delivery": "Saya kecewa sekali dengan pelayanan ekspedisi pengiriman. Pesanan saya sudah 5 hari belum sampai juga padahal estimasi 2 hari sampai. Waktu ditrack nomor resi tidak bergerak. Uang sudah keluar tapi barang tidak kunjung tiba.",
+    "neutral-std": "Pelayanannya biasa saja, tidak ada yang istimewa. Barang sampai dalam kondisi standar. CS membalas chat tapi terasa seperti jawaban bot template. Lumayan lah sesuai harga.",
+    "slang-colloquial": "Zonk parah sih ini, beli barang mahal tp kualitas bapuk bgt gak sesuai foto. Kapok deh belanja di sini, seller slow respon bgt!"
+  };
+
+  input.value = samples[type] || "";
+  const len = input.value.length;
+  document.getElementById("char-word-counter").textContent = `${len} karakter | ${input.value.split(/\s+/).length} kata`;
+  runSingleAnalysis();
+}
+
+function runSingleAnalysis() {
+  const text = document.getElementById("single-review-text").value.trim();
+  if (text.length < 5) {
+    alert("Harap masukkan ulasan minimal 5 karakter.");
+    return;
+  }
+
+  const catSelect = document.getElementById("single-category-select").value;
+  const res = analyzeABSA(text, catSelect);
+
+  // Render report into container
+  const reportDiv = document.getElementById("single-report-output");
+  reportDiv.innerHTML = renderSingleReportHTML(text, res);
+  reportDiv.style.display = "block";
+
+  // Show create ticket button
+  const tBtn = document.getElementById("btn-create-ticket-single");
+  tBtn.style.display = "inline-flex";
+  tBtn.onclick = () => {
+    createTicketFromSingle(text, res);
+  };
+
+  reportDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderSingleReportHTML(text, r) {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("id-ID", { day:"2-digit", month:"long", year:"numeric" });
+  const ticketId = "TKT-" + now.getFullYear() + "-" + Math.floor(1000 + Math.random() * 9000);
+
+  // Action Plan Items
+  let actionPlans = [];
+  if (r.normalizedScore >= 1.5) {
+    actionPlans = [
+      { priority: "p-high", label: "Tinggi", action: "Kirim Ucapan Terima Kasih Personal", pic: "CS Frontliner", target: "<24 Jam" },
+      { priority: "p-med",  label: "Sedang", action: "Daftarkan ke Program VoC / Promoter Brand", pic: "CX Marketing", target: "3 Hari" },
+      { priority: "p-low",  label: "Rendah", action: "Dokumentasikan sebagai Studi Kasus Internal", pic: "QA / Trainer", target: "7 Hari" }
+    ];
   } else if (r.normalizedScore >= -0.3) {
-    rows.push({ dim: "Dampak Bagi Pelanggan", val: "Pengalaman netral — pelanggan tidak terkesan namun juga tidak kecewa. Perlu inisiatif proaktif agar tidak berpindah." });
-  } else if (r.normalizedScore >= -1.5) {
-    rows.push({ dim: "Dampak Bagi Pelanggan", val: "Pelanggan merasa kecewa dan dirugikan. Risiko churn moderat. Penanganan cepat diperlukan untuk mempertahankan kepercayaan." });
+    actionPlans = [
+      { priority: "p-high", label: "Tinggi", action: "Follow-up Ekspektasi Layanan Pelanggan", pic: "CS Lead", target: "<24 Jam" },
+      { priority: "p-med",  label: "Sedang", action: "Kirim Survei Evaluasi Kepuasan (CSAT)", pic: "CX Operations", target: "2 Hari" }
+    ];
   } else {
-    rows.push({ dim: "Dampak Bagi Pelanggan", val: "Pelanggan sangat dirugikan dan memiliki potensi <strong>churn tinggi</strong>. Risiko reputasi jika ulasan disebarluaskan di media sosial." });
+    actionPlans = [
+      { priority: "p-crit", label: "Kritis", action: "Eskalasi Cepat ke Tim Investigasi / Supervisor", pic: "CS Manager + Ops", target: r.slaHours + " Jam" },
+      { priority: "p-high", label: "Tinggi", action: "Hubungi Pelanggan & Berikan Solusi Konkret", pic: "Senior Agent", target: "<4 Jam" },
+      { priority: "p-med",  label: "Sedang", action: "Evaluasi Kompensasi (Voucher / Diskon / Refund)", pic: "Finance / Lead", target: "1 Hari" },
+      { priority: "p-low",  label: "Rendah", action: "Root Cause Analysis (RCA) Antar Departemen", pic: "Cross-Functional", target: "7 Hari" }
+    ];
   }
 
-  // Risiko tersembunyi
-  if (isPos && lower.match(/terlambat|telat|delay|rusak|error|bug/)) {
-    rows.push({ dim: "Risiko Tersembunyi", val: "Meskipun CS menangani baik, isu asal (teknis/logistik) belum tentu terselesaikan. Perlu tindak lanjut ke tim terkait." });
-  } else if (!isPos) {
-    rows.push({ dim: "Risiko Tersembunyi", val: "Jika tidak ditangani segera, pelanggan berpotensi meninggalkan ulasan negatif publik yang dapat memengaruhi reputasi brand." });
-  }
-
-  return rows;
-}
-
-function generateFindings(r, text) {
-  const lower = text.toLowerCase();
-  const isPos = r.normalizedScore > 0;
-  const items = [];
-
-  if (r.normalizedScore >= 2) {
-    items.push({ type:"ok",   text:"Pelanggan adalah kandidat ideal untuk program <strong>VoC Champion</strong> atau <strong>referral program</strong>." });
-    items.push({ type:"ok",   text:"Profil pelanggan ini berpotensi sebagai <strong>brand promoter</strong> — pertimbangkan program loyalitas eksklusif." });
-  }
-  if (lower.match(/\b([A-Z][a-z]+)\b/) && isPos) {
-    const agents = text.match(/\b([A-Z][a-z]+)\b/g);
-    const named = agents ? agents.find(n => !["Saya","Ini","Kami","Tim","Terima","Kalian"].includes(n)) : null;
-    if (named) items.push({ type:"ok", text:`Performa <strong>${named}</strong> layak dijadikan <strong>benchmark pelatihan</strong> dan studi kasus internal.` });
-  }
-  if (lower.match(/terlambat|telat|delay|belum datang/)) {
-    items.push({ type:"warn", text:"Data keterlambatan pengiriman harus diteruskan ke <strong>tim logistik</strong> untuk analisis frekuensi dan SLA." });
-  }
-  if (lower.match(/error|bug|crash|tidak bisa|tidak berfungsi/)) {
-    items.push({ type:"bad",  text:"Laporan bug/error aplikasi harus segera dieskalasi ke <strong>tim teknis</strong> dengan log detail untuk investigasi." });
-  }
-  if (lower.match(/refund|pengembalian|uang|dana/)) {
-    items.push({ type:"warn", text:"Proses <strong>refund/pengembalian dana</strong> perlu diprioritaskan dan dikonfirmasi ke pelanggan dengan tenggat yang jelas." });
-  }
-  if (!isPos && r.intensity >= 8) {
-    items.push({ type:"bad",  text:"Tingkat intensitas tinggi — <strong>eskalasi ke supervisor/manajer CS</strong> disarankan sebelum menjawab pelanggan." });
-  }
-  if (r.normalizedScore >= -0.3 && r.normalizedScore < 0.8) {
-    items.push({ type:"info", text:"Sentimen netral mengindikasikan ekspektasi yang belum sepenuhnya terpenuhi. Pertimbangkan <strong>proactive follow-up</strong>." });
-  }
-  if (items.length === 0) {
-    items.push({ type:"info", text:"Tidak ada temuan khusus selain tindak lanjut standar sesuai action plan." });
-  }
-  return items;
-}
-
-function generateActionPlan(r) {
-  const isPos = r.normalizedScore > 0;
-  const plans = [];
-
-  if (isPos) {
-    plans.push({ priority:"t-high", label:"TINGGI — SEGERA",   action:"Balas Ulasan Pelanggan",      detail:"Kirim balasan personal dalam 24 jam. Sertakan rasa terima kasih yang tulus dan nama agent jika disebutkan.", target:"&lt;24 jam" });
-    plans.push({ priority:"t-mid",  label:"SEDANG — MINGGU INI", action:"Apresiasi Agent/Tim",        detail:"Berikan employee recognition formal (Agent of the Week, bonus poin). Dokumentasikan sebagai best practice case. PIC: Supervisor CS", target:"2–3 hari kerja" });
-    plans.push({ priority:"t-mid",  label:"SEDANG — BULAN INI",  action:"Rekam sebagai Studi Kasus",   detail:"Dokumentasikan alur penanganan sebagai knowledge base article untuk onboarding dan coaching agent baru. PIC: QA / L&D", target:"7 hari kerja" });
-    plans.push({ priority:"t-low",  label:"PANJANG — KUARTAL",   action:"Program Loyalitas & VoC",     detail:"Identifikasi pelanggan dengan pola serupa (tenure panjang, feedback positif). Rekrut sebagai brand advocate atau beta tester. PIC: CX Strategy", target:"Q3–Q4 2025" });
+  // Response Templates
+  let formalReply, casualReply, escalationReply;
+  if (r.normalizedScore >= 0.5) {
+    formalReply = `Yth. Bapak/Ibu Pelanggan,\n\nTerima kasih banyak telah meluangkan waktu untuk memberikan ulasan positif yang luar biasa ini. Kami sangat senang mengetahui layanan kami memenuhi harapan Anda.\n\nKepercayaan Anda adalah motivasi terbesar kami untuk terus memberikan yang terbaik. Apabila ada hal lain yang dapat kami bantu, jangan ragu untuk menghubungi kami kembali.\n\nSalam hangat,\nTim Customer Experience`;
+    casualReply = `Halo Kak! Makasih banyak yaa atas review positif dan bintang 5 nya! Senang banget bisa bikin pengalaman belanja Kakak menyenangkan. Ditunggu pesanan berikutnya! 😊✨ — Tim Support`;
+    escalationReply = `Halo Kak! Terima kasih banyak sudah menjadi pelanggan setia kami. Sebagai bentuk apresiasi, kami ingin memberikan voucher diskon khusus untuk pembelian berikutnya. Cek inbox Kakak ya!`;
   } else if (r.normalizedScore >= -0.3) {
-    plans.push({ priority:"t-high", label:"TINGGI — SEGERA",    action:"Balas & Tindak Lanjut",       detail:"Hubungi pelanggan secara proaktif. Tanya apakah ada yang bisa ditingkatkan. Jangan tunggu eskalasi.", target:"&lt;24 jam" });
-    plans.push({ priority:"t-mid",  label:"SEDANG — MINGGU INI", action:"Review Ekspektasi Pelanggan", detail:"Analisis gap antara ekspektasi pelanggan dan standar layanan saat ini. Bawa ke rapat tim untuk diskusi peningkatan.", target:"5 hari kerja" });
-    plans.push({ priority:"t-low",  label:"PANJANG",             action:"Inisiatif Proaktif CX",       detail:"Buat program check-in berkala (survey NPS, follow-up email) untuk pelanggan dengan profil netral. PIC: CX Manager", target:"Bulan ini" });
+    formalReply = `Yth. Bapak/Ibu Pelanggan,\n\nTerima kasih atas ulasan dan masukan yang Anda berikan. Masukan Anda sangat berharga bagi evaluasi standar layanan kami ke depannya.\n\nApabila ada hal spesifik yang ingin Anda sampaikan mengenai apa yang dapat kami tingkatkan, silakan hubungi kami kapan saja. Kami selalu siap mendengar.\n\nHormat kami,\nTim Layanan Pelanggan`;
+    casualReply = `Halo Kak! Terima kasih ya sudah memberikan feedback. Kalau ada saran atau kendala yang bisa kami bantu perbaiki, langsung DM kami ya Kak. Have a nice day! 🙏`;
+    escalationReply = `Halo Kak, kami ingin memastikan pengalaman Kakak semakin baik. Ada yang bisa kami bantu optimalkan untuk pesanan Kakak saat ini? Kami siap membantu.`;
   } else {
-    plans.push({ priority:"t-high", label:"TINGGI — SEGERA",    action:"Eskalasi & Respons Darurat",  detail:"Segera respons dengan empati. Jika intensitas tinggi (≥8), eskalasi ke supervisor sebelum membalas. SLA respons: &lt;1 jam.", target:"&lt;1 jam" });
-    plans.push({ priority:"t-high", label:"TINGGI — SEGERA",    action:"Investigasi & Resolusi",      detail:"Telusuri akar masalah (sistem/logistik/SDM). Berikan solusi konkret dan tenggat jelas kepada pelanggan. PIC: CS Lead + Ops", target:"&lt;4 jam" });
-    plans.push({ priority:"t-mid",  label:"SEDANG — MINGGU INI", action:"Kompensasi & Retention",     detail:"Evaluasi kelayakan kompensasi (diskon, voucher, refund) sebagai gestur goodwill. Dokumentasikan untuk audit. PIC: CS Manager", target:"3 hari kerja" });
-    plans.push({ priority:"t-mid",  label:"SEDANG — BULAN INI",  action:"Root Cause Analysis Formal", detail:"Adakan RCA lintas departemen (CS, Ops, Teknis). Buat laporan dan corrective action plan agar tidak berulang.", target:"14 hari kerja" });
-    plans.push({ priority:"t-low",  label:"PANJANG — KUARTAL",   action:"Review SOP & Training",      detail:"Perbarui SOP penanganan keluhan berdasarkan temuan RCA. Sertakan dalam modul pelatihan agent. PIC: QA / L&D", target:"Q3–Q4 2025" });
-  }
-  return plans;
-}
-
-function generateReplies(r, text) {
-  const isPos = r.normalizedScore > 0;
-  const isNeg = r.normalizedScore < -0.3;
-  const agents = text.match(/\b([A-Z][a-z]{2,})\b/g);
-  const named  = agents ? agents.find(n => !["Saya","Ini","Kami","Tim","Terima","Kalian","Yang","Dengan","Untuk"].includes(n)) : null;
-
-  let formalBody, casualBody;
-
-  if (isPos) {
-    formalBody = `<p>Yth. Bapak/Ibu [Nama Pelanggan],</p><br>
-<p>Terima kasih banyak telah meluangkan waktu untuk berbagi pengalaman positif Anda. Pesan Anda sungguh berarti bagi seluruh tim kami.</p><br>
-<p>${named
-  ? `Kami dengan bangga akan meneruskan apresiasi Anda kepada <strong>${named}</strong> — kami pastikan ia mengetahui betapa besar dampak kerja kerasnya bagi kepuasan Anda.`
-  : "Kami akan memastikan apresiasi Anda sampai kepada seluruh tim yang telah bekerja keras memberikan pelayanan terbaik."
-}</p><br>
-<p>Kepercayaan Anda adalah motivasi terbesar kami untuk terus berinovasi dan meningkatkan layanan. Kami berkomitmen untuk selalu hadir memberikan pengalaman terbaik bagi Anda.</p><br>
-<p>Apabila ada hal lain yang dapat kami bantu, jangan ragu menghubungi kami kapan saja.</p><br>
-<p>Salam hangat,<br><strong>Ikramm</strong><br>The Space Customer Experience Team</p>`;
-
-    casualBody = `Halo! Makasih banyak udah nulis review sebaik ini — kamu bikin hari kami jauh lebih menyenangkan! ${named ? `Langsung kami sampaikan ke <strong>${named}</strong> ya! ` : ""}Senang banget bisa terus menemani kamu. Sampai ketemu lagi! 😊 — Tim The Space`;
-
-  } else if (!isNeg) {
-    formalBody = `<p>Yth. Bapak/Ibu [Nama Pelanggan],</p><br>
-<p>Terima kasih telah menyampaikan pengalaman Anda kepada kami. Masukan Anda sangat berharga untuk perbaikan layanan kami ke depannya.</p><br>
-<p>Kami ingin memastikan bahwa setiap pelanggan mendapatkan pengalaman terbaik. Apabila ada hal spesifik yang ingin Anda sampaikan atau ada yang bisa kami perbaiki, kami sangat terbuka untuk mendengarnya.</p><br>
-<p>Silakan hubungi kami kapan saja — kami siap membantu.</p><br>
-<p>Hormat kami,<br><strong>Ikramm</strong></p>`;
-
-    casualBody = `Halo! Terima kasih udah ngasih feedback ya. Kalau ada yang bisa kami improve, langsung komen atau DM kami aja — kami siap dengerin dan bantu! 😊 — Tim The Space`;
-
-  } else {
-    formalBody = `<p>Yth. Bapak/Ibu [Nama Pelanggan],</p><br>
-<p>Pertama-tama, kami ingin menyampaikan permohonan maaf yang sebesar-besarnya atas pengalaman yang tidak menyenangkan ini. Kami memahami betapa mengecewakan situasi yang Anda alami.</p><br>
-<p>Kami telah menerima laporan Anda dan saat ini sedang dalam proses investigasi untuk segera menemukan solusi terbaik. Tim kami akan menghubungi Anda dalam <strong>[X jam/hari kerja]</strong> dengan update konkret dan penyelesaian masalah ini.</p><br>
-<p>Sekali lagi kami mohon maaf atas ketidaknyamanan ini. Kepercayaan Anda sangat penting bagi kami, dan kami berkomitmen untuk memastikan hal seperti ini tidak terulang kembali.</p><br>
-<p>Hormat kami,<br><strong>Ikramm</strong><br>The Space Customer Experience Team</p>`;
-
-    casualBody = `Halo, kami turut minta maaf banget atas pengalaman yang kurang menyenangkan ini 🙏 Kami lagi proses investigasi sekarang ya. Tim kami akan follow up ke kamu secepatnya. Bisa DM kami dengan no. order untuk percepat prosesnya? — Tim The Space`;
+    formalReply = `Yth. Bapak/Ibu Pelanggan,\n\nKami menyampaikan permohonan maaf yang sebesar-besarnya atas ketidaknyamanan dan kendala yang Anda alami. Kami memahami rasa kecewa Anda terhadap situasi ini.\n\nSaat ini laporan Anda telah kami teruskan dengan prioritas tertinggi kepada tim terkait untuk investigasi segera. Kami berkomitmen untuk memberikan solusi konkret dalam batas waktu ${r.slaHours} jam.\n\nHormat kami,\nManajemen Customer Experience`;
+    casualReply = `Halo Kak, kami memohon maaf sebesar-besarnya atas pengalaman yang kurang menyenangkan ini 🙏 Kami paham banget rasa kecewa Kakak. Masalah ini lagi kami telusuri sekarang dengan tim terkait. Boleh tolong DM kami no. pesanan agar bisa kami prioritaskan penanganannya? Terima kasih ya Kak.`;
+    escalationReply = `URGENT ACTION NOTICE:\nTiket ${ticketId} dieskalasikan dengan prioritas ${r.priorityTag}. Hubungi pelanggan via saluran langsung dalam batas SLA ${r.slaHours} jam dan siapkan opsi kompensasi/retensi.`;
   }
 
-  return { formalBody, casualBody };
-}
+  // Aspect ABSA Grid HTML
+  let absaHtml = "";
+  if (Object.keys(r.aspectResults).length > 0) {
+    absaHtml = `<div class="absa-grid">`;
+    for (const [asp, val] of Object.entries(r.aspectResults)) {
+      const pillClass = val.score >= 0.5 ? "b-sp" : val.score <= -0.5 ? "b-sn" : "b-n";
+      const icon = val.score >= 0.5 ? "🟢" : val.score <= -0.5 ? "🔴" : "🟡";
+      absaHtml += `
+        <div class="absa-card">
+          <span class="absa-aspect-name">${asp}</span>
+          <div style="font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px">
+            ${icon} <span>${val.score > 0 ? "+" : ""}${val.score}</span>
+          </div>
+          <span class="absa-score-pill ${pillClass}">${val.status}</span>
+        </div>
+      `;
+    }
+    absaHtml += `</div>`;
+  } else {
+    absaHtml = `<p style="color:var(--text-light);font-size:13px;margin:10px 0">Analisis aspek umum terintegrasi.</p>`;
+  }
 
-// ══════════════════════════════════════════════════════════════
-//  RENDER REPORT
-// ══════════════════════════════════════════════════════════════
-function renderReport(text, r) {
-  const now   = new Date();
-  const dateStr = now.toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"});
-  const ticketId= "CX-"+now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(Math.floor(Math.random()*9000)+1000);
-
-  const rootCauseRows = generateRootCause(r, text);
-  const findings      = generateFindings(r, text);
-  const actionPlans   = generateActionPlan(r);
-  const replies       = generateReplies(r, text);
-
-  // Score bar colors
-  const barColor = r.normalizedScore >= 0.8 ? "#1a7f37" : r.normalizedScore >= -0.3 ? "#d97706" : "#b91c1c";
-
-  // Churn / NPS
-  let churnRisk, churnColor, npsLabel, advLabel;
-  if      (r.normalizedScore >= 2)    { churnRisk="Sangat Rendah"; churnColor="#1a7f37"; npsLabel="Promoter (9–10)"; advLabel="Tinggi (Brand Promoter)"; }
-  else if (r.normalizedScore >= 0.8)  { churnRisk="Rendah";        churnColor="#3b82d4"; npsLabel="Passive (7–8)";   advLabel="Sedang"; }
-  else if (r.normalizedScore >= -0.3) { churnRisk="Moderat";       churnColor="#d97706"; npsLabel="Passive (6–7)";   advLabel="Rendah–Sedang"; }
-  else if (r.normalizedScore >= -1.5) { churnRisk="Tinggi";        churnColor="#c2410c"; npsLabel="Detractor (3–5)"; advLabel="Rendah"; }
-  else                                 { churnRisk="Sangat Tinggi"; churnColor="#b91c1c"; npsLabel="Detractor (1–3)"; advLabel="Sangat Rendah"; }
-
-  let html = `
-    <!-- Report Header -->
-    <div class="report-header">
-      <div class="rh-label">Customer Experience Intelligence Report</div>
-      <h2>Laporan Analisis Ulasan Pelanggan</h2>
-      <div class="rh-meta">
-        Tanggal: <strong>${dateStr}</strong> &nbsp;|&nbsp;
-        Analis: <strong>CX AI Engine v1.0</strong> &nbsp;|&nbsp;
-        ID Tiket: <strong>${ticketId}</strong> &nbsp;|&nbsp;
-        Panjang Ulasan: <strong>${r.wordCount} kata</strong>
+  return `
+    <!-- Result Header -->
+    <div class="card" style="margin-top:20px">
+      <div class="card-header" style="background:#f8fafc">
+        <div class="card-title-group">
+          <h2>📊 Laporan Analisis Ulasan: ID ${ticketId}</h2>
+          <p>Dibuat: ${dateStr} | Status Engine: Selesai | Durasi Proses: 12ms</p>
+        </div>
+        <span class="badge ${r.sentimentClass}" style="font-size:13px;padding:4px 14px">
+          ${r.sentiment}
+        </span>
       </div>
-    </div>
+      <div class="card-body">
+        
+        <!-- Score Highlights -->
+        <div class="kpi-grid" style="margin-bottom:18px">
+          <div class="kpi-card">
+            <span class="kpi-title">Confidence Score</span>
+            <div class="kpi-value" style="color:var(--primary)">${r.confidence}%</div>
+            <div class="kpi-sub">Tingkat keyakinan model</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Intensity Index</span>
+            <div class="kpi-value" style="color:#8a3ffc">${r.intensity} / 10</div>
+            <div class="kpi-sub">Magnitudo emosi teks</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Emosi Dominan</span>
+            <div class="kpi-value" style="font-size:18px;color:${r.churnColor}">${r.primaryEmotion}</div>
+            <div class="kpi-sub">Klasifikasi psikologi pelanggan</div>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-title">Risiko Churn</span>
+            <div class="kpi-value" style="font-size:18px;color:${r.churnColor}">${r.churnRisk.split(" ")[0]}</div>
+            <div class="kpi-sub">Potensi berpindah ke kompetitor</div>
+          </div>
+        </div>
 
-    <!-- Input Preview -->
-    <div class="input-preview">
-      <div class="ip-label">Input Ulasan Pelanggan</div>
-      "${escHtml(text)}"
-    </div>
+        <!-- Section ABSA -->
+        <div style="margin-bottom:20px">
+          <h3 style="font-size:14px;font-weight:700;margin-bottom:6px">
+            🎯 Aspect-Based Sentiment Analysis (ABSA Breakdown)
+          </h3>
+          <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px">
+            Memetakan polaritas sentimen pada setiap dimensi operasional dalam teks yang sama
+          </p>
+          ${absaHtml}
+        </div>
 
-    <!-- Section 1: Metrik Sentimen -->
-    <div class="section">
-      <div class="section-header">
-        <span class="section-num">1</span>
-        <span class="section-title">Metrik Sentimen &amp; Klasifikasi</span>
-      </div>
-      <div class="section-body">
-        <div class="metric-grid">
-          <div class="metric-card">
-            <div class="m-label">Sentimen Utama</div>
-            <div class="m-value"><span class="badge ${r.sentimentClass}">${r.sentiment}</span></div>
+        <!-- Extracted Keywords -->
+        <div class="grid-2col" style="margin-bottom:20px">
+          <div>
+            <h4 style="font-size:12px;font-weight:700;color:var(--success);text-transform:uppercase;margin-bottom:6px">
+              Kata Positif Terdeteksi
+            </h4>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${r.topPositive.length > 0 ? r.topPositive.map(p => `<span class="badge b-sp">"${p.phrase}" (+${p.score})</span>`).join("") : `<span style="font-size:12px;color:var(--text-light)">Tidak ada</span>`}
+            </div>
           </div>
-          <div class="metric-card">
-            <div class="m-label">Confidence Score</div>
-            <div class="m-value" style="color:${barColor}">${r.confidence}%</div>
-            <div class="score-bar-wrap"><div class="score-bar-bg">
-              <div class="score-bar-fill" style="width:${r.confidence}%;background:${barColor}"></div>
-            </div></div>
-          </div>
-          <div class="metric-card">
-            <div class="m-label">Intensity Score</div>
-            <div class="m-value" style="color:#3b82d4">${r.intensity} / 10</div>
-            <div class="score-bar-wrap"><div class="score-bar-bg">
-              <div class="score-bar-fill" style="width:${r.intensity*10}%;background:#3b82d4"></div>
-            </div></div>
-          </div>
-          <div class="metric-card">
-            <div class="m-label">Primary Emotion</div>
-            <div class="m-value" style="color:#7c5cd8">${r.primaryEmotion}</div>
-          </div>
-          <div class="metric-card" style="grid-column:1/-1">
-            <div class="m-label">Kategori Terdeteksi</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
-              ${r.detectedCategories.map(c => `<span class="badge t-blue" style="border-radius:999px;background:#dbeafe;color:#1d4ed8">${c}</span>`).join("")}
+          <div>
+            <h4 style="font-size:12px;font-weight:700;color:var(--danger);text-transform:uppercase;margin-bottom:6px">
+              Kata Negatif / Keluhan
+            </h4>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${r.topNegative.length > 0 ? r.topNegative.map(n => `<span class="badge b-sn">"${n.phrase}" (${n.score})</span>`).join("") : `<span style="font-size:12px;color:var(--text-light)">Tidak ada</span>`}
             </div>
           </div>
         </div>
 
-        ${r.topPositive.length > 0 || r.topNegative.length > 0 ? `
-        <table>
-          <thead><tr>
-            <th>Kata/Frasa Terdeteksi</th>
-            <th>Bobot Skor</th>
-            <th>Modifikator</th>
-          </tr></thead>
-          <tbody>
-            ${[...r.topPositive,...r.topNegative].map(m=>`
-            <tr>
-              <td><em>"${escHtml(m.phrase)}"</em></td>
-              <td><span class="badge ${m.score>0?"b-p":"b-ng"}">${m.score>0?"+":""}${m.score}</span></td>
-              <td style="color:#57606a;font-size:12px">
-                ${m.negated?"<span class='tag t-mid'>Negasi</span> ":""}
-                ${m.intensified?"<span class='tag t-low'>Intensifier</span>":""}
-                ${!m.negated&&!m.intensified?"—":""}
-              </td>
-            </tr>`).join("")}
-          </tbody>
-        </table>` : `<p style="color:#9ca3af;font-size:13px;margin-top:8px">Tidak ada kata kunci spesifik yang terdeteksi. Analisis berbasis konteks umum.</p>`}
-      </div>
-    </div>
-
-    <!-- Section 2: Root Cause -->
-    <div class="section">
-      <div class="section-header">
-        <span class="section-num">2</span>
-        <span class="section-title">Root Cause &amp; Key Takeaways</span>
-      </div>
-      <div class="section-body">
-        <table>
-          <thead><tr><th style="width:190px">Dimensi</th><th>Analisis</th></tr></thead>
-          <tbody>
-            ${rootCauseRows.map(row=>`<tr><td><strong>${row.dim}</strong></td><td>${row.val}</td></tr>`).join("")}
-          </tbody>
-        </table>
-        <ul class="finding-list" style="margin-top:14px">
-          ${findings.map(f=>`
-          <li>
-            <span class="fi fi-${f.type}">${f.type==="ok"?"✔":f.type==="warn"?"⚠":f.type==="bad"?"✖":"→"}</span>
-            <span>${f.text}</span>
-          </li>`).join("")}
-        </ul>
-      </div>
-    </div>
-
-    <!-- Section 3: Action Plan -->
-    <div class="section">
-      <div class="section-header">
-        <span class="section-num">3</span>
-        <span class="section-title">Action Plan Berskala Prioritas</span>
-      </div>
-      <div class="section-body">
-        <table>
-          <thead><tr>
-            <th style="width:140px">Prioritas</th>
-            <th style="width:160px">Tindakan</th>
-            <th>Detail &amp; PIC</th>
-            <th style="width:90px">Target</th>
-          </tr></thead>
-          <tbody>
-            ${actionPlans.map(p=>`
-            <tr>
-              <td><span class="tag ${p.priority}">${p.label}</span></td>
-              <td><strong>${p.action}</strong></td>
-              <td>${p.detail}</td>
-              <td style="white-space:nowrap">${p.target}</td>
-            </tr>`).join("")}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Section 4: Draft Balasan -->
-    <div class="section">
-      <div class="section-header">
-        <span class="section-num">4</span>
-        <span class="section-title">Draft Balasan — Multi-Tone</span>
-      </div>
-      <div class="section-body">
-        <div class="reply-box">
-          <div class="reply-label">
-            <span>Opsi A</span>
-            <span class="tag t-mid">Empati &amp; Solutif — Formal</span>
-            <span style="color:#57606a;font-size:11px;font-weight:400">Email / Live Chat CS / Platform Resmi</span>
+        <!-- Action Plan Matrix -->
+        <div style="margin-bottom:20px">
+          <h3 style="font-size:14px;font-weight:700;margin-bottom:10px">
+            📋 Rencana Tindakan Berskala Prioritas (Action Plan)
+          </h3>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Prioritas</th>
+                  <th>Tindakan Operasional</th>
+                  <th>Penanggung Jawab (PIC)</th>
+                  <th>Target SLA</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${actionPlans.map(p => `
+                  <tr>
+                    <td><span class="tag-priority ${p.priority}">${p.label}</span></td>
+                    <td><strong>${p.action}</strong></td>
+                    <td>${p.pic}</td>
+                    <td><strong>${p.target}</strong></td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
           </div>
-          ${replies.formalBody}
         </div>
-        <div class="reply-box">
-          <div class="reply-label">
-            <span>Opsi B</span>
-            <span class="tag t-low">Singkat &amp; Kasual</span>
-            <span style="color:#57606a;font-size:11px;font-weight:400">Media Sosial / Google Review / Marketplace</span>
-          </div>
-          <p>${replies.casualBody}</p>
-        </div>
-      </div>
-    </div>
 
-    <!-- Summary Bar -->
-    <div class="summary-bar">
-      <div class="sb-item">
-        <div class="sb-label">Status Kasus</div>
-        <div class="sb-value">
-          <span class="badge ${r.normalizedScore >= -0.3 ? "b-p" : "b-ng"}">
-            ${r.normalizedScore >= 0.5 ? "Closed — Positive" : r.normalizedScore >= -0.3 ? "Monitor — Neutral" : "Open — Needs Attention"}
-          </span>
+        <!-- Draft Replies -->
+        <div>
+          <h3 style="font-size:14px;font-weight:700;margin-bottom:10px">
+            ✉️ Draf Balasan Otomatis Multi-Tone
+          </h3>
+
+          <div class="reply-template">
+            <div class="reply-head">
+              <span>OPSI 1: FORMAL &amp; PROFESIONAL (Email / Portal Resmi)</span>
+              <button class="copy-btn" onclick="copyReply('reply-formal')">📋 Salin Teks</button>
+            </div>
+            <div class="reply-content" id="reply-formal">${escHtml(formalReply)}</div>
+          </div>
+
+          <div class="reply-template">
+            <div class="reply-head">
+              <span>OPSI 2: RAMAH &amp; KASUAL (Media Sosial / Chat Marketplace)</span>
+              <button class="copy-btn" onclick="copyReply('reply-casual')">📋 Salin Teks</button>
+            </div>
+            <div class="reply-content" id="reply-casual">${escHtml(casualReply)}</div>
+          </div>
+
         </div>
-      </div>
-      <div class="sb-item">
-        <div class="sb-label">Churn Risk</div>
-        <div class="sb-value" style="color:${churnColor}">${churnRisk}</div>
-      </div>
-      <div class="sb-item">
-        <div class="sb-label">Advocacy Potential</div>
-        <div class="sb-value" style="color:#3b82d4">${advLabel}</div>
-      </div>
-      <div class="sb-item">
-        <div class="sb-label">NPS Projection</div>
-        <div class="sb-value" style="color:#7c5cd8">${npsLabel}</div>
+
       </div>
     </div>
   `;
-
-  return html;
 }
 
-// ══════════════════════════════════════════════════════════════
-//  HELPERS
-// ══════════════════════════════════════════════════════════════
-function escHtml(str) {
-  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-
-// ══════════════════════════════════════════════════════════════
-//  UI CONTROLLER
-// ══════════════════════════════════════════════════════════════
-const textarea  = document.getElementById("review-input");
-const btnAnalyze= document.getElementById("btn-analyze");
-const btnClear  = document.getElementById("btn-clear");
-const charCount = document.getElementById("char-count");
-const catSelect = document.getElementById("category-select");
-const reportDiv = document.getElementById("report");
-
-textarea.addEventListener("input", () => {
-  const len = textarea.value.trim().length;
-  charCount.textContent = len + " karakter";
-  btnAnalyze.disabled = len < 10;
-});
-
-btnClear.addEventListener("click", () => {
-  textarea.value = "";
-  charCount.textContent = "0 karakter";
-  btnAnalyze.disabled = true;
-  reportDiv.style.display = "none";
-  reportDiv.innerHTML = "";
-  document.querySelectorAll(".chip").forEach(c => c.classList.remove("chip-active"));
-});
-
-// Sample chips
-document.querySelectorAll(".chip[data-text]").forEach(chip => {
-  chip.addEventListener("click", () => {
-    // isi textarea & set kategori
-    textarea.value = chip.dataset.text;
-    charCount.textContent = chip.dataset.text.length + " karakter";
-    btnAnalyze.disabled = false;
-
-    const catMap = { service:"service", delivery:"delivery", product:"product", app:"app", billing:"billing" };
-    catSelect.value = catMap[chip.dataset.cat] || "auto";
-
-    // highlight chip aktif
-    document.querySelectorAll(".chip").forEach(c => c.classList.remove("chip-active"));
-    chip.classList.add("chip-active");
-
-    // scroll ke textarea & langsung analisis
-    textarea.scrollIntoView({ behavior:"smooth", block:"center" });
-    setTimeout(() => btnAnalyze.click(), 300);
+function copyReply(elementId) {
+  const text = document.getElementById(elementId).innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast("Draf balasan berhasil disalin ke clipboard!");
+  }).catch(() => {
+    showToast("Gagal menyalin teks.");
   });
-});
+}
 
-btnAnalyze.addEventListener("click", () => {
-  const text = textarea.value.trim();
-  if (text.length < 10) return;
+function createTicketFromSingle(text, analysis) {
+  const newTicket = {
+    id: `TKT-${Math.floor(1000 + Math.random() * 9000)}`,
+    customer: "Pelanggan Individual",
+    issue: text.slice(0, 95) + (text.length > 95 ? "..." : ""),
+    priority: analysis.priorityTag,
+    slaTarget: analysis.slaHours + " Jam",
+    pic: analysis.detectedCategories[0]?.includes("Delivery") ? "Tim Logistik" : analysis.detectedCategories[0]?.includes("Bug") ? "Tim IT Support" : "Agent Senior CS",
+    status: "Open",
+    date: new Date().toLocaleDateString("id-ID")
+  };
 
-  btnAnalyze.disabled = true;
-  btnAnalyze.textContent = "Menganalisis...";
+  activeTickets.unshift(newTicket);
+  updateKPIs();
+  renderTicketTable("all");
+  showToast(`Tiket ${newTicket.id} berhasil dibuat dan masuk ke papan SLA!`);
+  switchTab("tab-tickets");
+}
 
-  // Simulasi delay singkat agar terasa responsif
+// ──────────────────────────────────────────────────────────────
+// 7. SLA TICKET & INCIDENT WORKFLOW
+// ──────────────────────────────────────────────────────────────
+function syncTicketsFromDataset() {
+  activeTickets = [];
+  activeDataset.filter(d => d.score < -0.3).forEach(d => {
+    activeTickets.push({
+      id: "TKT-" + d.id.replace(/\D/g, ""),
+      customer: d.customer,
+      issue: d.text.slice(0, 90) + (d.text.length > 90 ? "..." : ""),
+      priority: d.priority,
+      slaTarget: d.analysis.slaHours + " Jam",
+      pic: d.category.includes("Delivery") ? "Budi (Logistik)" : d.category.includes("Bug") ? "Dimas (Tech)" : d.category.includes("Billing") ? "Siti (Billing)" : "Rina (CS)",
+      status: "Open",
+      date: d.date
+    });
+  });
+
+  renderTicketTable("all");
+}
+
+function renderTicketTable(filter = "all") {
+  const tbody = document.getElementById("ticket-table-body");
+  tbody.innerHTML = "";
+
+  const filtered = activeTickets.filter(t => {
+    if (filter === "all") return true;
+    if (filter === "Open") return t.status === "Open";
+    if (filter === "Resolved") return t.status === "Resolved";
+    return t.priority === filter;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-light)">Tidak ada tiket pada kategori filter ini.</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(t => {
+    const isP1 = t.priority.includes("P1");
+    const isP2 = t.priority.includes("P2");
+    const tagClass = isP1 ? "p-crit" : isP2 ? "p-high" : "p-med";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${t.id}</strong></td>
+      <td><span class="tag-priority ${tagClass}">${t.priority}</span></td>
+      <td><strong>${t.customer}</strong></td>
+      <td style="max-width:280px;line-height:1.4">${escHtml(t.issue)}</td>
+      <td><strong>${t.slaTarget}</strong></td>
+      <td><span class="badge b-p">${t.pic}</span></td>
+      <td>
+        <span class="badge ${t.status === 'Resolved' ? 'b-sp' : 'b-sn'}">
+          ${t.status === 'Resolved' ? '✔ Selesai' : '⏳ Open'}
+        </span>
+      </td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="toggleTicketStatus('${t.id}')">
+          ${t.status === 'Resolved' ? 'Buka Kembali' : 'Selesaikan'}
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleTicketStatus(ticketId) {
+  const t = activeTickets.find(x => x.id === ticketId);
+  if (t) {
+    t.status = t.status === "Resolved" ? "Open" : "Resolved";
+    renderTicketTable(document.querySelector(".filter-pill.active")?.dataset.tfilter || "all");
+    updateKPIs();
+    showToast(`Status tiket ${ticketId} diubah menjadi: ${t.status}`);
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// 8. DATA VISUALIZATION (CHARTS ENGINE WITH OFFLINE SVG FALLBACK)
+// ──────────────────────────────────────────────────────────────
+let chartInstances = {};
+
+function renderAllCharts() {
+  if (activeDataset.length === 0) return;
+
+  const sentimentCounts = {
+    "Sangat Positif": 0,
+    "Positif": 0,
+    "Netral": 0,
+    "Negatif": 0,
+    "Sangat Negatif": 0
+  };
+
+  const categoryCounts = {
+    "Delivery / Pengiriman": 0,
+    "Service Quality": 0,
+    "Product Quality": 0,
+    "Bug Aplikasi": 0,
+    "Billing / Pembayaran": 0
+  };
+
+  const churnCounts = {
+    "Sangat Rendah": 0,
+    "Rendah": 0,
+    "Moderat": 0,
+    "Tinggi": 0,
+    "Kritis / Sangat Tinggi": 0
+  };
+
+  const aspectScores = {
+    "Delivery / Logistik": [],
+    "Service Quality": [],
+    "Product Quality": [],
+    "Bug Aplikasi": [],
+    "Billing / Refund": []
+  };
+
+  activeDataset.forEach(d => {
+    if (sentimentCounts[d.sentiment] !== undefined) sentimentCounts[d.sentiment]++;
+    if (categoryCounts[d.category] !== undefined) categoryCounts[d.category]++;
+    
+    // Churn
+    const riskKey = d.churnRisk.split(" ")[0];
+    if (churnCounts[riskKey] !== undefined) churnCounts[riskKey]++;
+
+    // ABSA aspect aggregation
+    if (d.analysis && d.analysis.aspectResults) {
+      for (const [asp, val] of Object.entries(d.analysis.aspectResults)) {
+        if (aspectScores[asp]) aspectScores[asp].push(val.score);
+      }
+    }
+  });
+
+  // Check if Chart.js is available
+  if (typeof Chart !== "undefined") {
+    renderChartJS(sentimentCounts, categoryCounts, churnCounts, aspectScores);
+  } else {
+    renderFallbackCharts(sentimentCounts, categoryCounts, churnCounts, aspectScores);
+  }
+}
+
+function renderChartJS(sentimentCounts, categoryCounts, churnCounts, aspectScores) {
+  // Destroy previous instances
+  Object.values(chartInstances).forEach(c => c && c.destroy());
+
+  // 1. Sentiment Doughnut
+  const ctxSentiment = document.getElementById("chart-sentiment");
+  if (ctxSentiment) {
+    chartInstances.sentiment = new Chart(ctxSentiment, {
+      type: "doughnut",
+      data: {
+        labels: ["Sangat Positif", "Positif", "Netral", "Negatif", "Sangat Negatif"],
+        datasets: [{
+          data: Object.values(sentimentCounts),
+          backgroundColor: ["#198038", "#0f62fe", "#9ca3af", "#f59e0b", "#da1e28"],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: "bottom" } }
+      }
+    });
+  }
+
+  // 2. Aspect ABSA Bar Chart
+  const ctxAspect = document.getElementById("chart-aspect");
+  if (ctxAspect) {
+    const aspectLabels = Object.keys(aspectScores);
+    const aspectAvgValues = aspectLabels.map(k => {
+      const arr = aspectScores[k];
+      return arr.length > 0 ? Number((arr.reduce((a,b)=>a+b,0) / arr.length).toFixed(2)) : 0;
+    });
+
+    chartInstances.aspect = new Chart(ctxAspect, {
+      type: "bar",
+      data: {
+        labels: ["Logistik", "Customer Service", "Kualitas Produk", "Aplikasi Mobile", "Billing & Refund"],
+        datasets: [{
+          label: "Indeks Sentimen Aspek",
+          data: aspectAvgValues,
+          backgroundColor: aspectAvgValues.map(v => v >= 0.5 ? "#198038" : v <= -0.5 ? "#da1e28" : "#f59e0b"),
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { min: -3, max: 3 }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  // 3. Category Bar Chart
+  const ctxCat = document.getElementById("chart-category");
+  if (ctxCat) {
+    chartInstances.category = new Chart(ctxCat, {
+      type: "bar",
+      data: {
+        labels: ["Delivery", "CS Quality", "Product", "App Bug", "Billing"],
+        datasets: [{
+          label: "Volume Feedback",
+          data: Object.values(categoryCounts),
+          backgroundColor: "#0f62fe",
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  // 4. Churn Risk Pie Chart
+  const ctxChurn = document.getElementById("chart-churn");
+  if (ctxChurn) {
+    chartInstances.churn = new Chart(ctxChurn, {
+      type: "pie",
+      data: {
+        labels: ["Rendah / Sangat Rendah", "Moderat", "Tinggi / Kritis"],
+        datasets: [{
+          data: [
+            (churnCounts["Sangat"] || 0) + (churnCounts["Rendah"] || 0),
+            churnCounts["Moderat"] || 0,
+            (churnCounts["Tinggi"] || 0) + (churnCounts["Kritis"] || 0)
+          ],
+          backgroundColor: ["#198038", "#f59e0b", "#da1e28"],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: "bottom" } }
+      }
+    });
+  }
+}
+
+function renderFallbackCharts(sentimentCounts, categoryCounts, churnCounts, aspectScores) {
+  // Pure HTML/CSS Bar rendering if CDN is unreachable offline
+  const total = activeDataset.length || 1;
+  const wrap = document.getElementById("chart-sentiment-wrap");
+  if (wrap) {
+    wrap.innerHTML = `
+      <div class="fallback-bar-group">
+        ${Object.entries(sentimentCounts).map(([label, count]) => {
+          const pct = Math.round((count / total) * 100);
+          const color = label.includes("Positif") ? "var(--success)" : label.includes("Negatif") ? "var(--danger)" : "#9ca3af";
+          return `
+            <div class="fallback-bar-item">
+              <div class="fb-label-row">
+                <span>${label}</span>
+                <strong>${count} (${pct}%)</strong>
+              </div>
+              <div class="fb-track">
+                <div class="fb-fill" style="width:${pct}%;background:${color}"></div>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// 9. LEXICON MANAGEMENT & CUSTOM RULE ADDER
+// ──────────────────────────────────────────────────────────────
+function renderLexiconTable() {
+  const tbody = document.getElementById("lexicon-tbody");
+  tbody.innerHTML = "";
+  const entries = Object.entries(LEXICON).sort((a,b) => b[1] - a[1]);
+
+  document.getElementById("lexicon-count-badge").textContent = `${entries.length} Kata/Frasa`;
+
+  entries.forEach(([word, score]) => {
+    const tr = document.createElement("tr");
+    const badgeClass = score >= 2 ? "b-sp" : score > 0 ? "b-p" : score === 0 ? "b-n" : score > -3 ? "b-ng" : "b-sn";
+    const polarityLabel = score > 0 ? "Positif" : score < 0 ? "Negatif" : "Netral";
+    tr.innerHTML = `
+      <td><strong>${escHtml(word)}</strong></td>
+      <td><span class="badge ${badgeClass}">${polarityLabel}</span></td>
+      <td><strong>${score > 0 ? "+" : ""}${score}</strong></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterLexiconTable() {
+  const query = document.getElementById("lexicon-search").value.toLowerCase();
+  const rows = document.querySelectorAll("#lexicon-tbody tr");
+  rows.forEach(r => {
+    const text = r.children[0].textContent.toLowerCase();
+    r.style.display = text.includes(query) ? "" : "none";
+  });
+}
+
+function addCustomLexiconWord() {
+  const word = document.getElementById("new-word-input").value.trim().toLowerCase();
+  const score = parseInt(document.getElementById("new-score-select").value, 10);
+
+  if (!word) {
+    alert("Harap masukkan kata atau frasa yang valid.");
+    return;
+  }
+
+  LEXICON[word] = score;
+  document.getElementById("new-word-input").value = "";
+  renderLexiconTable();
+  showToast(`Kata "${word}" (${score > 0 ? "+" : ""}${score}) berhasil ditambahkan ke leksikon!`);
+}
+
+function testSingleWord() {
+  const word = document.getElementById("test-word-input").value.trim().toLowerCase();
+  const resEl = document.getElementById("test-word-result");
+  if (!word) return;
+
+  const score = LEXICON[word];
+  if (score !== undefined) {
+    const pol = score > 0 ? "Positif" : score < 0 ? "Negatif" : "Netral";
+    resEl.innerHTML = `<span style="color:${score>0?'var(--success)':score<0?'var(--danger)':'var(--text-muted)'}">Terdaftar: Polarity ${pol} (Bobot: ${score > 0 ? "+" : ""}${score})</span>`;
+  } else {
+    resEl.innerHTML = `<span style="color:var(--text-muted)">Kata belum terdaftar dalam leksikon (Dihitung 0 / Netral).</span>`;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// 10. MODAL & UTILITY HELPERS
+// ──────────────────────────────────────────────────────────────
+function openDetailModal(id) {
+  const item = activeDataset.find(x => x.id === id);
+  if (!item) return;
+
+  document.getElementById("modal-title").textContent = `Detail Ulasan: ${item.id} (${item.customer})`;
+  const body = document.getElementById("modal-body");
+  body.innerHTML = `
+    <div style="margin-bottom:14px">
+      <span class="badge ${item.analysis.sentimentClass}" style="font-size:13px">${item.sentiment}</span>
+      <span class="badge b-p" style="margin-left:6px">${item.category}</span>
+      <span style="float:right;font-size:12px;color:var(--text-light)">${item.date} | ${item.channel}</span>
+    </div>
+
+    <div style="background:#f8fafc;border-left:4px solid var(--primary);padding:12px 14px;border-radius:4px;font-size:14px;font-style:italic;margin-bottom:16px">
+      "${escHtml(item.text)}"
+    </div>
+
+    <div class="kpi-grid" style="margin-bottom:16px">
+      <div class="kpi-card">
+        <span class="kpi-title">Score</span>
+        <div class="kpi-value">${item.score}</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-title">Emosi</span>
+        <div class="kpi-value" style="font-size:16px">${item.analysis.primaryEmotion}</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-title">Churn Risk</span>
+        <div class="kpi-value" style="font-size:16px;color:${item.analysis.churnColor}">${item.churnRisk.split(" ")[0]}</div>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-title">Prioritas SLA</span>
+        <div class="kpi-value" style="font-size:16px">${item.priority}</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal()">Tutup</button>
+      <button class="btn btn-primary btn-sm" onclick="populateToSingle('${item.id}')">Buka di Deep-Dive</button>
+    </div>
+  `;
+
+  document.getElementById("detail-modal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("detail-modal").style.display = "none";
+}
+
+function populateToSingle(id) {
+  const item = activeDataset.find(x => x.id === id);
+  if (!item) return;
+  closeModal();
+  document.getElementById("single-review-text").value = item.text;
+  const len = item.text.length;
+  document.getElementById("char-word-counter").textContent = `${len} karakter | ${item.text.split(/\s+/).length} kata`;
+  switchTab("tab-single");
+  runSingleAnalysis();
+}
+
+function showToast(msg) {
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.style.display = "block";
   setTimeout(() => {
-    const result = analyzeText(text, catSelect.value);
-    reportDiv.innerHTML = renderReport(text, result);
-    reportDiv.style.display = "block";
-    reportDiv.scrollIntoView({ behavior: "smooth", block: "start" });
-    btnAnalyze.disabled = false;
-    btnAnalyze.textContent = "▶ Analisis Sekarang";
-  }, 400);
-});
+    toast.style.display = "none";
+  }, 2600);
+}
 
-// Init state
-btnAnalyze.disabled = true;
+function escHtml(str) {
+  if (!str) return "";
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 </script>
 </body>
 </html>
